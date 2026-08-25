@@ -1,0 +1,12 @@
+.acside/
+.backup/
+.gradle/
+.kotlin/
+AI-README/
+build/
+app/build/
+
+.idea/
+*.iml
+*.log
+*.tmp

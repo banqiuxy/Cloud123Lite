@@ -1,0 +1,108 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+}
+
+android {
+    namespace 'com.banqiu.thirdparty123pan'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.banqiu.thirdparty123pan'
+        minSdk 29
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+// Hilt 聚合任务在 AGP 8.13 + Gradle 9 环境下存在 javapoet 类路径冲突，
+// 禁用聚合任务（官方支持模式）：单模块 App 功能完全一致，只是放弃跨模块组件聚合。
+hilt {
+    enableAggregatingTask = false
+}
+
+dependencies {
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.material
+    implementation libs.androidx.constraintlayout
+
+    // Compose
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.ui
+    implementation libs.compose.ui.graphics
+    implementation libs.compose.ui.tooling.preview
+    implementation libs.compose.foundation
+    implementation libs.compose.material3
+    implementation libs.compose.material.icons
+    implementation libs.activity.compose
+    implementation libs.lifecycle.runtime.ktx
+    implementation libs.lifecycle.viewmodel.compose
+    implementation libs.lifecycle.runtime.compose
+    implementation libs.navigation.compose
+
+    // Hilt
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
+    implementation libs.hilt.navigation.compose
+    implementation libs.hilt.work
+
+    // Hilt and Room KSP processors are declared above.
+
+    // Network
+    implementation libs.retrofit
+    implementation libs.retrofit.kotlinx.serialization
+    implementation libs.okhttp
+    implementation libs.okhttp.logging
+    implementation libs.kotlinx.serialization.json
+    implementation libs.kotlinx.coroutines.android
+
+    // Coil
+    implementation libs.coil.compose
+    implementation libs.coil.network.okhttp
+
+    // Room
+    implementation libs.room.runtime
+    implementation libs.room.ktx
+    ksp libs.room.compiler
+
+    // DataStore / WorkManager
+    implementation libs.datastore.preferences
+    implementation libs.work.runtime.ktx
+
+    // Haze glass effect
+    implementation libs.haze
+
+    // Security
+    implementation libs.security.crypto
+
+    // QR code
+    implementation libs.zxing.core
+
+    debugImplementation platform(libs.compose.bom)
+    debugImplementation libs.compose.ui.tooling
+}
