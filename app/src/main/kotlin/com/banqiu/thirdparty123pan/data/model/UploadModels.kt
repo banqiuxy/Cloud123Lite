@@ -69,8 +69,13 @@ data class S3ListPartsRequest(
 
 @Serializable
 data class S3ListPartsData(
-    @SerialName("parts") val parts: List<S3PartInfo> = emptyList()
-)
+    // 实测（2026-08）：服务端返回大写 "Parts" 键，保留小写作兼容。
+    @SerialName("Parts") val upperParts: List<S3PartInfo> = emptyList(),
+    @SerialName("parts") val lowerParts: List<S3PartInfo> = emptyList()
+) {
+    val allParts: List<S3PartInfo>
+        get() = if (upperParts.isNotEmpty()) upperParts else lowerParts
+}
 
 @Serializable
 data class S3PartInfo(
@@ -90,6 +95,41 @@ data class S3PartInfo(
 @Serializable
 data class UploadCompleteRequest(
     @SerialName("fileId") val fileId: Long
+)
+
+// ---------- 新版 v2 上传完成（2026-08 实测：旧版 upload_complete 已废弃，仍返回 code 0 但不再落地文件） ----------
+// 还原自官方 Web 客户端（yun.123pan.cn）上传引擎：
+//   complete:    file/upload_complete/v2  （POST，body 为下方完整字段）
+//   completePoll: file/upload_complete/result（GET，参数同 v2 body）
+@Serializable
+data class UploadCompleteV2Request(
+    @SerialName("fileId") val fileId: Long,
+    @SerialName("bucket") val bucket: String,
+    @SerialName("fileSize") val fileSize: Long,
+    @SerialName("key") val key: String,
+    @SerialName("isMultipart") val isMultipart: Boolean,
+    @SerialName("uploadId") val uploadId: String,
+    // 注意：官方使用大写 StorageNode（与 upload_request 响应字段一致）
+    @SerialName("StorageNode") val storageNode: String
+)
+
+@Serializable
+data class UploadCompleteV2Data(
+    // v2 成功时同步返回真实文件信息；异步合并时为 null，需轮询 result 接口。
+    @SerialName("file_info") val fileInfo: UploadFileInfoV2? = null,
+    // 轮询间隔秒数（result 接口返回，默认 2s）
+    @SerialName("duration") val duration: Int? = null
+)
+
+@Serializable
+data class UploadFileInfoV2(
+    // 云盘中的真实 FileId。upload_request 返回的 FileId 仅为会话占位 ID（数量级差异巨大）。
+    @SerialName("FileId") val fileId: Long = 0,
+    @SerialName("FileName") val fileName: String? = null,
+    @SerialName("Type") val type: Int = 0,
+    @SerialName("Size") val size: Long = 0,
+    @SerialName("Etag") val etag: String? = null,
+    @SerialName("ParentFileId") val parentFileId: Long = 0
 )
 
 // 同名文件冲突业务码，需以 duplicate=1 重试

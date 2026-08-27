@@ -117,7 +117,7 @@ fun ProfileScreen(
                 ProfileItem("回收站", Icons.Filled.DeleteSweep, CloudError) { onNavigateRecycleBin() }
                 ProfileItem("分享记录", Icons.Filled.Share, CloudBlue) { onNavigateShares() }
                 ProfileItem("设置", Icons.Filled.Settings, Color(0xFF5B8DEF)) { onNavigateSettings() }
-                ProfileItem("关于 Cloud123", Icons.Filled.Info, Color(0xFF7E6FF0)) { onNavigateAbout() }
+                ProfileItem("关于 Cloud123Lite", Icons.Filled.Info, Color(0xFF7E6FF0)) { onNavigateAbout() }
             }
 
             Spacer(Modifier.height(24.dp))

@@ -71,8 +71,8 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val themeMode by settingsStore.themeMode.collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
-    val dynamicColor by settingsStore.dynamicColor.collectAsStateWithLifecycle(initialValue = false)
+    val themeMode by settingsStore.themeMode.collectAsStateWithLifecycle(initialValue = ThemeMode.LIGHT)
+    val dynamicColor by settingsStore.dynamicColor.collectAsStateWithLifecycle(initialValue = true)
     val glassEnabled by settingsStore.glassEnabled.collectAsStateWithLifecycle(initialValue = true)
     val notificationsEnabled by settingsStore.notificationsEnabled.collectAsStateWithLifecycle(initialValue = true)
     val concurrency by settingsStore.concurrency.collectAsStateWithLifecycle(initialValue = 3)

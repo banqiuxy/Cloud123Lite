@@ -109,24 +109,43 @@ interface ApiService {
     suspend fun copyTask(@Query("taskId") taskId: String): ApiResponse<Map<String, Any>>
 
     // ==================== 5.14 上传请求（含秒传） ====================
-    @POST("b/api/file/upload_request")
+    // 2026-08 修复：上传链路统一迁移到 a/api 网关（官方 Web 客户端 postUrl 前缀）。
+    // b/api 旧链路的最终落地管道已被服务端废弃。
+    @POST("a/api/file/upload_request")
     suspend fun uploadRequest(@Body body: UploadRequest): ApiResponse<UploadRequestData>
 
     // ==================== 5.15 S3 分片预签名 URL ====================
-    @POST("b/api/file/s3_repare_upload_parts_batch")
+    @POST("a/api/file/s3_repare_upload_parts_batch")
     suspend fun s3PrepareParts(@Body body: S3PartRequest): ApiResponse<S3PartData>
 
     // ==================== 5.16 S3 分片列表 ====================
-    @POST("b/api/file/s3_list_upload_parts")
+    @POST("a/api/file/s3_list_upload_parts")
     suspend fun s3ListParts(@Body body: S3ListPartsRequest): ApiResponse<S3ListPartsData>
 
-    // ==================== 5.17 S3 完成分片上传 ====================
-    @POST("b/api/file/s3_complete_multipart_upload")
+    // ==================== 5.17 S3 完成分片上传（已废弃） ====================
+    // 官方 Web 客户端已不调用该接口，合并动作由 upload_complete/v2 一并完成。
+    // 保留定义仅供回滚，勿在新代码中使用。
+    @POST("a/api/file/s3_complete_multipart_upload")
     suspend fun s3CompleteMultipart(@Body body: S3ListPartsRequest): ApiResponse<Unit>
 
-    // ==================== 5.18 上传完成确认 ====================
-    @POST("b/api/file/upload_complete")
-    suspend fun uploadComplete(@Body body: UploadCompleteRequest): ApiResponse<Unit>
+    // ==================== 5.18 上传完成确认（新版 v2） ====================
+    // 2026-08 修复：旧版 b/api/file/upload_complete 已废弃——仍返回 code 0
+    // 但服务端不再创建文件（API 全成功、文件不落地的假成功）。
+    // 还原自官方 Web 客户端：POST file/upload_complete/v2，同步返回 file_info；
+    // 异步合并时轮询 GET file/upload_complete/result。
+    @POST("a/api/file/upload_complete/v2")
+    suspend fun uploadCompleteV2(@Body body: UploadCompleteV2Request): ApiResponse<UploadCompleteV2Data>
+
+    @GET("a/api/file/upload_complete/result")
+    suspend fun uploadCompleteResult(
+        @Query("fileId") fileId: Long,
+        @Query("bucket") bucket: String,
+        @Query("fileSize") fileSize: Long,
+        @Query("key") key: String,
+        @Query("isMultipart") isMultipart: Boolean,
+        @Query("uploadId") uploadId: String,
+        @Query("StorageNode") storageNode: String
+    ): ApiResponse<UploadCompleteV2Data>
 
     // ==================== 5.19 分享创建 ====================
     @POST("a/api/share/create")

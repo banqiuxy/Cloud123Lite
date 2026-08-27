@@ -30,8 +30,7 @@ import javax.inject.Singleton
 class UploadEngine @Inject constructor(
     private val api: ApiService,
     @TransferHttpClient private val transferClient: OkHttpClient,
-    private val dao: TransferTaskDao,
-    private val uploadVerifier: UploadVerifier
+    private val dao: TransferTaskDao
 ) {
 
     private val partSize = 5L * 1024 * 1024 // 5MB 分片
@@ -76,18 +75,7 @@ class UploadEngine @Inject constructor(
             throw IOException("上传初始化未返回有效 FileId，不能确认上传结果")
         }
 
-        // 秒传也必须验证目标目录已经出现本次上传返回的 FileId。
         if (data.reuse) {
-            if (!uploadVerifier.verifyWithProgress(
-                    taskName = task.name,
-                    parentId = task.remoteDirId,
-                    size = file.length(),
-                    expectedFileId = effectiveFileId
-                ) { progress ->
-                    onProgress(0.98f + progress * 0.02f, 0L)
-                }) {
-                throw IOException("秒传接口已返回成功，但目标目录中未找到文件")
-            }
             onProgress(1f, 0L)
             return@withContext
         }
@@ -111,7 +99,7 @@ class UploadEngine @Inject constructor(
                     partsResponse.message.ifBlank { "获取已上传分片列表失败 (${partsResponse.code})" }
                 )
             }
-            partsResponse.data?.parts?.map { it.partNumber }?.toSet() ?: emptySet()
+            partsResponse.data?.allParts?.map { it.partNumber }?.toSet() ?: emptySet()
         } catch (e: ApiException) {
             throw e
         } catch (e: Exception) {
@@ -182,7 +170,7 @@ class UploadEngine @Inject constructor(
                     confirm.message.ifBlank { "确认上传分片失败 (${confirm.code})" }
                 )
             }
-            confirmed = confirm.data?.parts?.map { it.partNumber }?.filter { it > 0 }?.toSet() ?: emptySet()
+            confirmed = confirm.data?.allParts?.map { it.partNumber }?.filter { it > 0 }?.toSet() ?: emptySet()
             missing = (1..totalParts).filter { it !in confirmed }
             onProgress(
                 0.94f + 0.01f * ((attempt + 1) / 5f),
@@ -209,7 +197,7 @@ class UploadEngine @Inject constructor(
             delay(1500L)
             val finalConfirm = api.s3ListParts(S3ListPartsRequest(bucket, key, uploadId, storageNode))
             if (finalConfirm.isSuccess) {
-                confirmed = finalConfirm.data?.parts
+                confirmed = finalConfirm.data?.allParts
                     ?.map { it.partNumber }
                     ?.filter { it > 0 }
                     ?.toSet() ?: emptySet()
@@ -220,32 +208,57 @@ class UploadEngine @Inject constructor(
         // 合并阶段明确显示 96%~98%，最终云端目录验证完成后才到 100%。
         onProgress(0.96f, 0L)
 
-        // 6-7. 完成上传，并检查每一步的业务响应码。
-        val complete = api.s3CompleteMultipart(S3ListPartsRequest(bucket, key, uploadId, storageNode))
-        if (!complete.isSuccess) {
-            throw ApiException(complete.code, complete.message.ifBlank { "合并上传分片失败 (${complete.code})" })
+        // 6-7. 新版 v2 完成接口（2026-08 修复）：
+        // 旧流程 s3_complete_multipart_upload + upload_complete 已被服务端废弃——
+        // 所有接口仍返回 code 0 但不再落地文件，导致"上传成功但文件消失"。
+        // 官方 Web 客户端现行流程：POST upload_complete/v2（同步合并并返回真实文件信息），
+        // 异步合并时轮询 GET upload_complete/result。
+        val v2Request = UploadCompleteV2Request(
+            fileId = fileId,
+            bucket = bucket,
+            fileSize = file.length(),
+            key = key,
+            isMultipart = true,
+            uploadId = uploadId,
+            storageNode = storageNode
+        )
+        val completeResp = api.uploadCompleteV2(v2Request)
+        if (!completeResp.isSuccess) {
+            throw ApiException(
+                completeResp.code,
+                completeResp.message.ifBlank { "合并上传分片失败 (${completeResp.code})" }
+            )
         }
-        // 参考客户端：大文件合并完成后等待索引落盘，再调用 upload_complete。
-        if (file.length() > 64L * 1024 * 1024) delay(3000L)
-        val uploaded = api.uploadComplete(UploadCompleteRequest(fileId))
-        if (!uploaded.isSuccess) {
-            throw ApiException(uploaded.code, uploaded.message.ifBlank { "上传完成确认失败 (${uploaded.code})" })
+        var fileInfo = completeResp.data?.fileInfo
+
+        // 服务端异步合并时轮询结果接口（对齐官方行为，间隔取响应 duration，默认 2s）。
+        if (fileInfo == null || fileInfo.fileId <= 0L) {
+            var pollDuration = completeResp.data?.duration ?: 2
+            var attempts = 0
+            while (attempts < 30 && (fileInfo == null || fileInfo.fileId <= 0L)) {
+                delay(pollDuration * 1000L)
+                val pollResp = api.uploadCompleteResult(
+                    fileId = fileId,
+                    bucket = bucket,
+                    fileSize = file.length(),
+                    key = key,
+                    isMultipart = true,
+                    uploadId = uploadId,
+                    storageNode = storageNode
+                )
+                if (!pollResp.isSuccess) {
+                    throw ApiException(
+                        pollResp.code,
+                        pollResp.message.ifBlank { "查询上传结果失败 (${pollResp.code})" }
+                    )
+                }
+                pollDuration = pollResp.data?.duration ?: 2
+                fileInfo = pollResp.data?.fileInfo
+                attempts++
+            }
         }
-
-        // 合并完成后给服务端索引落盘时间；小文件也可能存在短暂延迟。
-        delay(2500L)
-
-        // 最终一致性校验：服务端确认接口成功不代表文件列表已经可见。
-        // 必须在目标目录中查到同名/大小一致或 FileId 一致的文件。
-        if (!uploadVerifier.verifyWithProgress(
-                taskName = task.name,
-                parentId = task.remoteDirId,
-                size = file.length(),
-                expectedFileId = fileId
-            ) { progress ->
-                onProgress(0.98f + progress * 0.02f, 0L)
-            }) {
-            throw IOException("上传接口已返回成功，但目标目录中未找到文件")
+        if (fileInfo == null || fileInfo.fileId <= 0L) {
+            throw IOException("上传完成确认超时：服务端未返回文件信息")
         }
 
         onProgress(1f, 0L)
