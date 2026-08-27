@@ -125,11 +125,14 @@ class AuthInterceptor(
         if (loginUuid.isNotEmpty()) builder.header("loginuuid", loginUuid)
 
         val authorization = sessionManager.authorization
-        if (authorization.isNotEmpty()) builder.header("authorization", authorization)
-
-        // Cookie 仅由 PersistentCookieJar 根据服务器真实 Set-Cookie 管理。
-        // 参考项目使用 requests.Session；不要手动拼接 token Cookie，避免覆盖
-        // 或阻断服务器实际下发的会话 Cookie。
+        if (authorization.isNotEmpty()) {
+            builder.header("authorization", authorization)
+            // 兼容更新前已保存的会话：旧版本只保存了 Bearer，未保存 token Cookie。
+            if (!hasTokenCookie(sessionManager.cookie)) {
+                val token = authorization.removePrefix("Bearer").trim()
+                if (token.isNotEmpty()) sessionManager.setLoginCookies(token)
+            }
+        }
 
         val osVersion = sessionManager.osVersion
         val deviceType = sessionManager.deviceType
@@ -189,3 +192,10 @@ class DomainFailoverInterceptor : Interceptor {
         return chain.proceed(request)
     }
 }
+
+private fun hasTokenCookie(raw: String): Boolean =
+    raw.split(';').any { part ->
+        val trimmed = part.trim()
+        trimmed.substringBefore('=', "").equals("token", ignoreCase = true) &&
+            trimmed.substringAfter('=', "").isNotBlank()
+    }

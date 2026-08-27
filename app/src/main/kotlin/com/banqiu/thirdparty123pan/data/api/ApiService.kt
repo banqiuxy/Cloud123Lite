@@ -148,14 +148,15 @@ interface ApiService {
     ): ApiResponse<UploadCompleteV2Data>
 
     // ==================== 5.19 分享创建 ====================
-    @POST("a/api/share/create")
+    // 官网当前生产环境使用 api.123278.com 的 b/api 网关。
+    @POST("https://api.123278.com/b/api/share/create")
     suspend fun shareCreate(@Body body: ShareCreateRequest): ApiResponse<ShareCreateData>
 
     // ==================== 5.20/5.21 分享列表 ====================
     @GET("https://api.123278.com/b/api/share/list")
     suspend fun shareList(
         @Query("driveId") driveId: Int = 0,
-        @Query("limit") limit: Int = 100,
+        @Query("limit") limit: Int = 500,
         @Query("next") next: Int = 0,
         @Query("orderBy") orderBy: String = "fileId",
         @Query("orderDirection") orderDirection: String = "desc",

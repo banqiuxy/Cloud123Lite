@@ -5,6 +5,7 @@ import com.banqiu.thirdparty123pan.data.model.*
 import com.banqiu.thirdparty123pan.data.transfer.DownloadUrlRewriter
 import com.banqiu.thirdparty123pan.di.TransferHttpClient
 import com.banqiu.thirdparty123pan.domain.model.FileItem
+import com.banqiu.thirdparty123pan.domain.model.ShareCreation
 import com.banqiu.thirdparty123pan.domain.model.ShareItem
 import com.banqiu.thirdparty123pan.domain.repository.CopySource
 import com.banqiu.thirdparty123pan.domain.repository.FileOrderBy
@@ -128,20 +129,60 @@ class FileRepositoryImpl @Inject constructor(
         return DownloadUrlRewriter.resolve(raw, transferClient)
     }
 
-    override suspend fun createShare(fileIds: List<Long>, password: String?, days: Int): String {
+    override suspend fun createShare(fileIds: List<Long>, password: String?, days: Int): ShareCreation {
+        if (fileIds.isEmpty()) throw ApiException(-1, "请选择要分享的文件")
+
         val expiration = when {
             days <= 0 -> "2099-12-12T08:00:00+08:00"
             else -> LocalDate.now().plusDays(days.toLong())
                 .atTime(23, 59, 59)
                 .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "+08:00"
         }
-        val resp = api.shareCreate(ShareCreateRequest(
-            fileIdList = fileIds,
-            sharePwd = password?.takeIf { it.isNotBlank() },
-            expiration = expiration
-        ))
-        val data = check(resp) ?: throw ApiException(resp.code, resp.message)
-        return data.shareKey ?: throw ApiException(resp.code, "分享响应缺少 ShareKey")
+        // 官网的 expireValue：1=1天，2=7天，3=30天，4=永久。
+        val shareModality = when {
+            days <= 0 -> 4
+            days <= 1 -> 1
+            days <= 7 -> 2
+            else -> 3
+        }
+        val resp = api.shareCreate(
+            ShareCreateRequest(
+                fileIdList = fileIds.joinToString(","),
+                sharePwd = password.orEmpty(),
+                expiration = expiration,
+                fileNum = fileIds.size,
+                renameVisible = true,
+                shareModality = shareModality,
+                operatePlace = 1,
+                trafficLimitSwitch = 1,
+                trafficLimit = 0,
+                trafficSwitch = 1,
+                fillPwdSwitch = 0
+            )
+        )
+        val data = check(resp)
+            ?: throw ApiException(resp.code, resp.message.ifBlank { "分享响应为空" })
+
+        val rawUrl = data.links().firstOrNull()
+            ?: data.shareUrl?.takeIf { it.isNotBlank() }
+            ?: data.shareUrlLower?.takeIf { it.isNotBlank() }
+            ?: data.shareKey?.takeIf { it.isNotBlank() }
+            ?: data.shareKeyLower?.takeIf { it.isNotBlank() }
+            ?: throw ApiException(resp.code, "分享响应缺少分享链接")
+        val url = normalizeShareUrl(rawUrl)
+        val actualPassword = data.sharePwd?.takeIf { it.isNotBlank() }
+            ?: data.sharePwdUpper?.takeIf { it.isNotBlank() }
+            ?: password?.takeIf { it.isNotBlank() }
+        return ShareCreation(url = url, password = actualPassword)
+    }
+
+    private fun normalizeShareUrl(value: String): String {
+        val trimmed = value.trim()
+        return when {
+            trimmed.startsWith("http://") || trimmed.startsWith("https://") -> trimmed
+            trimmed.startsWith("/") -> "https://www.123pan.cn$trimmed"
+            else -> "https://www.123pan.cn/s/$trimmed"
+        }
     }
 
     override suspend fun shareList(): List<ShareItem> {

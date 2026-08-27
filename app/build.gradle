@@ -15,8 +15,8 @@ android {
         applicationId 'com.banqiu.thirdparty123pan'
         minSdk 29
         targetSdk 34
-        versionCode 15
-        versionName '1.5'
+        versionCode 16
+        versionName '1.6'
     }
 
     buildFeatures {

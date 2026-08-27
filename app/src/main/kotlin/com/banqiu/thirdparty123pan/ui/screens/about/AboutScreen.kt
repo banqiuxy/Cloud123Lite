@@ -75,7 +75,7 @@ fun AboutScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(top = 20.dp)
                 )
                 Text(
-                    text = "版本 1.5",
+                    text = "版本 1.6",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp)

@@ -29,15 +29,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.rememberCoroutineScope
 import com.banqiu.thirdparty123pan.domain.model.ShareItem
 import com.banqiu.thirdparty123pan.ui.components.CloudBackground
 import com.banqiu.thirdparty123pan.ui.components.CloudEmpty
@@ -45,15 +42,14 @@ import com.banqiu.thirdparty123pan.ui.components.CloudError
 import com.banqiu.thirdparty123pan.ui.components.CloudLoading
 import com.banqiu.thirdparty123pan.ui.components.ConfirmDialog
 import com.banqiu.thirdparty123pan.ui.components.GlassTopBar
+import com.banqiu.thirdparty123pan.ui.components.copyShareToClipboard
 import com.banqiu.thirdparty123pan.ui.theme.CloudBlue
 import com.banqiu.thirdparty123pan.ui.theme.CloudError
 import dev.chrisbanes.haze.HazeState
-import kotlinx.coroutines.launch
 
 /**
  * 分享记录：查看、复制链接、删除分享
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ShareListScreen(
     onBack: () -> Unit,
@@ -61,8 +57,7 @@ fun ShareListScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val hazeState = remember { HazeState() }
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var deleteTarget by remember { mutableStateOf<ShareItem?>(null) }
 
     Box(Modifier.fillMaxSize()) {
@@ -98,14 +93,12 @@ fun ShareListScreen(
                             ShareRow(
                                 share = share,
                                 onCopy = {
-                                scope.launch {
-                                    clipboard.setClipEntry(
-                                        ClipEntry(
-                                            clipData = android.content.ClipData.newPlainText("Cloud123", share.shareUrl)
-                                        )
+                                    copyShareToClipboard(
+                                        context = context,
+                                        url = share.shareUrl,
+                                        password = share.sharePwd
                                     )
-                                }
-                            },
+                                },
                                 onDelete = { deleteTarget = share }
                             )
                         }

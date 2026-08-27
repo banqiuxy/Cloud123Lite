@@ -13,13 +13,16 @@ data class ShareItem(
 ) {
     companion object {
         fun fromRemote(item: ShareListItem): ShareItem = ShareItem(
-            shareId = item.shareId,
-            shareKey = item.shareKey ?: "",
-            shareName = item.shareName ?: "",
-            shareUrl = item.shareUrl ?: (item.shareKey?.let { "https://www.123pan.cn/s/$it" } ?: ""),
-            sharePwd = item.sharePwd,
-            fileId = item.fileId,
-            expiration = item.expiration
+            shareId = if (item.shareId > 0) item.shareId else item.shareIdUpper,
+            shareKey = item.shareKey ?: item.shareKeyUpper ?: "",
+            shareName = item.shareName ?: item.shareNameUpper ?: "",
+            shareUrl = (item.shareUrl ?: item.shareUrlUpper).orEmpty().ifBlank {
+                val key = item.shareKey ?: item.shareKeyUpper
+                key?.let { "https://www.123pan.cn/s/$it" }.orEmpty()
+            },
+            sharePwd = item.sharePwd ?: item.sharePwdUpper,
+            fileId = if (item.fileId > 0) item.fileId else item.fileIdUpper,
+            expiration = item.expiration ?: item.expirationUpper
         )
     }
 }

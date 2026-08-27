@@ -46,8 +46,9 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     private fun saveSession(authorization: String, cookieToken: String) {
-        // authorization 使用 Bearer <token>，Cookie 由真实 Set-Cookie 进入 CookieJar。
+        // 官网分享/用户接口同时校验 authorization 和 token Cookie。
         sessionManager.authorization = authorization
+        sessionManager.setLoginCookies(cookieToken)
     }
 
     override suspend fun getUserInfo(): User {

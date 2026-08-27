@@ -1,6 +1,7 @@
 package com.banqiu.thirdparty123pan.domain.repository
 
 import com.banqiu.thirdparty123pan.domain.model.FileItem
+import com.banqiu.thirdparty123pan.domain.model.ShareCreation
 import com.banqiu.thirdparty123pan.domain.model.ShareItem
 
 enum class FileOrderBy(val value: String) {
@@ -38,7 +39,7 @@ interface FileRepository {
     /** 批量下载（文件夹）的下载链接 */
     suspend fun resolveBatchDownloadUrl(fileId: Long): String?
 
-    suspend fun createShare(fileIds: List<Long>, password: String?, days: Int): String
+    suspend fun createShare(fileIds: List<Long>, password: String?, days: Int): ShareCreation
     suspend fun shareList(): List<ShareItem>
     suspend fun deleteShare(shareIds: List<Long>)
 }

@@ -13,6 +13,7 @@
 Cloud123Lite 是一款 **轻量化** 的 **第三方** 123云盘(123pan) Android客户端，提供无广告、简洁流畅、现代化的文件管理体验。去除了官方客户端的下载流量限制，支持批量下载、上传、断点续传，支持账号密码登录、扫码登录、cookie鉴权登录等多种登录方式。
 
 > 本项目为个人学习与技术研究项目，与 123 云盘官方无任何关联。
+- 交流群：1051025890
 
 ## 功能特性
 
@@ -75,8 +76,8 @@ Cloud123Lite 是一款 **轻量化** 的 **第三方** 123云盘(123pan) Android
 
 ```bash
 # 克隆项目
-git clone https://github.com/yourname/Cloud123.git
-cd Cloud123
+git clone https://github.com/yourname/Cloud123Lite.git
+cd Cloud123Lite
 
 # 构建 Debug APK
 ./gradlew :app:assembleDebug
@@ -100,15 +101,6 @@ app/src/main/kotlin/com/banqiu/thirdparty123pan/
 ├── ui/            # Compose 页面、主题、通用组件
 └── util/          # 工具类（设备指纹、MD5、格式化等）
 ```
-
-## 已知问题
-
-当前版本存在以下已知问题，正在排查修复中：
-
-- **无法上传文件**：上传任务在获取 S3 分片预签名地址阶段失败，可能与服务端鉴权策略有关。
-- **无法重命名**：重命名接口请求被服务端拒绝。
-
-> 其余功能（登录、文件浏览、下载、删除、回收站、分享记录等）可正常使用。
 
 ## 免责声明
 

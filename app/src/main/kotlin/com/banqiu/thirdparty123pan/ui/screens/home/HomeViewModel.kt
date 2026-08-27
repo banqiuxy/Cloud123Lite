@@ -304,18 +304,32 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun shareSelected(password: String?, days: Int) {
+    fun shareSelected(
+        password: String?,
+        days: Int,
+        onSuccess: (ShareResult) -> Unit = {},
+        onFailure: (String) -> Unit = {}
+    ) {
         val ids = _uiState.value.selectedIds.toList()
-        if (ids.isEmpty()) return
+        if (ids.isEmpty()) {
+            onFailure("未选择要分享的文件")
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(busyMessage = "生成分享链接…") }
             try {
-                val shareKey = fileRepository.createShare(ids, password, days)
-                val url = "https://www.123pan.cn/s/$shareKey"
+                val share = fileRepository.createShare(ids, password, days)
+                val result = ShareResult(
+                    url = share.url,
+                    password = share.password
+                )
                 _uiState.update { it.copy(busyMessage = null) }
-                _shareUrl.value = ShareResult(url, password)
+                _shareUrl.value = result
+                onSuccess(result)
             } catch (e: Exception) {
-                _uiState.update { it.copy(busyMessage = null, error = e.message ?: "分享失败") }
+                val message = e.message?.takeIf { it.isNotBlank() } ?: "分享失败"
+                _uiState.update { it.copy(busyMessage = null, error = message) }
+                onFailure(message)
             }
         }
     }

@@ -2,6 +2,7 @@ package com.banqiu.thirdparty123pan.ui.screens.home
 
 import android.net.Uri
 import android.os.Environment
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -59,10 +60,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -78,6 +76,7 @@ import com.banqiu.thirdparty123pan.ui.components.CloudLoading
 import com.banqiu.thirdparty123pan.ui.components.ConfirmDialog
 import com.banqiu.thirdparty123pan.ui.components.FileRow
 import com.banqiu.thirdparty123pan.ui.components.FolderPickerDialog
+import com.banqiu.thirdparty123pan.ui.components.copyShareToClipboard
 import com.banqiu.thirdparty123pan.ui.components.GlassButton
 import com.banqiu.thirdparty123pan.ui.components.GlassCard
 import com.banqiu.thirdparty123pan.ui.components.GlassFab
@@ -99,7 +98,7 @@ data class PickerState(
     val crumbs: List<FileItem> = emptyList()
 )
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     hazeState: HazeState,
@@ -112,7 +111,6 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val files = viewModel.filteredFiles
     val context = LocalContext.current
-    val clipboard = LocalClipboard.current
     val listState = rememberLazyListState()
 
     // 对话框状态
@@ -122,6 +120,7 @@ fun HomeScreen(
     var showMovePicker by remember { mutableStateOf(false) }
     var showCopyPicker by remember { mutableStateOf(false) }
     var showShareSheet by remember { mutableStateOf(false) }
+    var sharing by remember { mutableStateOf(false) }
     var showFabMenu by remember { mutableStateOf(false) }
     var sharePassword by remember { mutableStateOf("") }
     var shareDays by remember { mutableStateOf(30) }
@@ -536,10 +535,32 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.height(20.dp))
                 GlassButton(
-                    text = "生成分享链接",
+                    text = if (sharing) "生成中…" else "生成分享链接",
+                    enabled = !sharing,
                     onClick = {
-                        viewModel.shareSelected(sharePassword.takeIf { it.isNotBlank() }, shareDays)
-                        showShareSheet = false
+                        val password = sharePassword.takeIf { it.isNotBlank() }
+                        sharing = true
+                        viewModel.shareSelected(
+                            password = password,
+                            days = shareDays,
+                            onSuccess = { result ->
+                                sharing = false
+                                showShareSheet = false
+                                copyShareToClipboard(
+                                    context = context,
+                                    url = result.url,
+                                    password = result.password
+                                )
+                            },
+                            onFailure = { message ->
+                                sharing = false
+                                Toast.makeText(
+                                    context,
+                                    "分享失败：$message",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        )
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp)
                 )
@@ -556,15 +577,13 @@ fun HomeScreen(
                     append("提取码：${shareResult!!.password}")
                 }
             },
-            confirmText = "复制链接",
+            confirmText = "复制全部信息",
             onConfirm = {
-                scope.launch {
-                    clipboard.setClipEntry(
-                        ClipEntry(
-                            clipData = android.content.ClipData.newPlainText("Cloud123", shareResult!!.url)
-                        )
-                    )
-                }
+                copyShareToClipboard(
+                    context = context,
+                    url = shareResult!!.url,
+                    password = shareResult!!.password
+                )
                 viewModel.consumeShareResult()
             },
             onDismiss = {
