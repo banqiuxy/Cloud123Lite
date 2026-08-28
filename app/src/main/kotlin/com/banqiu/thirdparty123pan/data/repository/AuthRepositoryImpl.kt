@@ -55,14 +55,20 @@ class AuthRepositoryImpl @Inject constructor(
         if (!sessionManager.isLoggedIn) throw ApiException(-1, "未登录")
         val resp = api.userInfo()
         val data = checkSuccess(resp, resp.data) ?: throw ApiException(resp.code, resp.message)
+        val uid = data.effectiveUid
+        val nickname = data.effectiveNickname.ifBlank {
+            if (uid > 0L) "UID $uid" else "用户"
+        }
+        val vipLevel = data.effectiveVipLevel
         val user = User(
-            uid = data.uid ?: 0L,
-            nickname = data.nickname ?: "用户${data.uid ?: ""}",
-            avatar = data.avatar,
-            vipLevel = data.vip?.level ?: 0,
-            vipName = data.vip?.name ?: if ((data.vip?.level ?: 0) > 0) "VIP" else "普通用户",
-            totalSpace = data.space,
-            usedSpace = data.useSpace
+            uid = uid,
+            nickname = nickname,
+            avatar = data.effectiveAvatar,
+            vipLevel = vipLevel,
+            vipName = data.vip?.name?.takeIf { it.isNotBlank() }
+                ?: if (vipLevel > 0) "VIP" else "普通用户",
+            totalSpace = data.effectiveTotalSpace,
+            usedSpace = data.effectiveUsedSpace
         )
         _currentUser.value = user
         return user

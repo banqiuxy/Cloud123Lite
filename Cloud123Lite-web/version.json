@@ -1,0 +1,8 @@
+{
+  "name": "Cloud123Lite",
+  "version": "1.6",
+  "versionCode": 16,
+  "downloadUrl": "https://github.com/banqiuxy/Cloud123Lite/releases/download/v1.6/Cloud123Lite_v1.6_arm64-v8a.apk",
+  "sourceUrl": "https://github.com/banqiuxy/Cloud123Lite",
+  "minAndroid": "Android 10.0+"
+}

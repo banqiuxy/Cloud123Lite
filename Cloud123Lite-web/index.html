@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#080d12">
+    <meta name="description" content="Cloud123Lite 是一款开源的轻量化第三方 123 云盘 Android客户端。无广告、简洁流畅，支持批量传输与多种登录方式。">
+    <meta property="og:title" content="Cloud123Lite · 开源轻量化第三方 123云盘 客户端">
+    <meta property="og:description" content="无广告、简洁流畅的第三方 123 云盘 Android 客户端。">
+    <meta property="og:image" content="Cloud123Lite.png">
+    <link rel="icon" type="image/png" href="Cloud123Lite.png">
+    <title>Cloud123Lite · 开源轻量化第三方 123云盘 客户端</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <div class="page-grain" aria-hidden="true"></div>
+
+    <header class="site-header glass" data-reveal>
+        <a class="brand" href="#top" aria-label="Cloud123Lite 首页">
+            <span class="brand-icon"><img src="Cloud123Lite.png" alt="Cloud123Lite 应用图标"></span>
+            <span class="brand-name">Cloud123<span>Lite</span></span>
+        </a>
+        <nav class="site-nav" aria-label="主要导航">
+            <a href="#features">功能</a>
+            <a href="#about">说明</a>
+        </nav>
+        <a class="header-download glass-control" href="#download" aria-label="前往下载区域">
+            <span>获取应用</span>
+            <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 2.5v10m0 0 3.5-3.5M10 12.5 6.5 9M4 15.5v1h12v-1"/></svg>
+        </a>
+    </header>
+
+    <main id="main-content">
+        <section class="hero content-wrap" id="top" aria-labelledby="hero-title">
+            <div class="hero-copy" data-reveal>
+                <p class="eyebrow"><span class="eyebrow-dot"></span>第三方 Android 客户端 <span class="eyebrow-rule"></span> <span id="hero-version">读取版本中...</span></p>
+                <h1 id="hero-title">把云盘，<br><em>留在自己手里。</em></h1>
+                <p class="hero-description">Cloud123Lite 是一款开源的轻量化第三方 123 云盘 Android 客户端，提供无广告、简洁流畅、现代化的文件管理体验。</p>
+                <div class="hero-actions" id="download">
+                    <a class="button button-primary" id="download-link" href="Cloud123Lite_v1.6.apk" download>
+                        <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 2.5v9.5m0 0 3.25-3.25M10 12 6.75 8.75M4 15.5v1h12v-1"/></svg>
+                        <span>下载 APK</span>
+                        <span class="button-meta" id="download-version">v1.6</span>
+                    </a>
+                    <a class="button button-secondary" id="source-link" href="https://github.com/banqiuxy/Cloud123Lite" target="_blank" rel="noreferrer">
+                        <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M7.5 12.5 12.5 7.5M6 15.5H4.5A2 2 0 0 1 2.5 13.5V12a2 2 0 0 1 2-2h1.25M14 4.5h1.5a2 2 0 0 1 2 2V8a2 2 0 0 1-2 2h-1.25M6.5 6.5l2-2a2.12 2.12 0 0 1 3 0l2 2"/></svg>
+                        <span>查看源码</span>
+                    </a>
+                </div>
+                                <!-- version status intentionally omitted -->
+            </div>
+
+            <div class="hero-visual" data-reveal data-delay="120">
+                <div class="visual-orbit orbit-one" aria-hidden="true"></div>
+                <div class="visual-orbit orbit-two" aria-hidden="true"></div>
+                <div class="release-panel glass">
+                    <div class="panel-topline">
+                        <span class="live-mark"><span></span>当前版本</span>
+                        <span class="panel-code">BUILD <b id="build-code">16</b></span>
+                    </div>
+                    <div class="app-emblem">
+                        <span class="emblem-shine" aria-hidden="true"></span>
+                        <img src="Cloud123Lite.png" alt="Cloud123Lite 应用图标">
+                    </div>
+                    <div class="panel-heading">
+                        <span class="panel-kicker">Cloud storage / Android</span>
+                        <h2>Cloud123Lite</h2>
+                        <p>轻、快、没有多余打扰。</p>
+                    </div>
+                    <div class="panel-data">
+                        <div><span>版本</span><strong id="panel-version">v1.6</strong></div>
+                        <div><span>最低支持</span><strong id="min-android">Android 10.0+</strong></div>
+                        <div><span>包体格式</span><strong>APK</strong></div>
+                    </div>
+                    <div class="panel-footnote"><span class="footnote-line"></span>独立开发 · 开源可查</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="feature-section content-wrap" id="features" aria-labelledby="features-title">
+            <div class="section-heading" data-reveal>
+                <p class="eyebrow">在意的，都有</p>
+                <h2 id="features-title">一套更顺手的<br><span>文件工作流</span></h2>
+            </div>
+            <div class="feature-layout">
+                <article class="feature-featured glass" data-reveal>
+                    <div class="feature-index">01 / 03</div>
+                    <div class="feature-icon feature-icon-large" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 5.5h16v13H4zM8 9h8M8 12h5M8 15h7"/></svg>
+                    </div>
+                    <h3>文件管理，清楚而直接</h3>
+                    <p>浏览文件、文件夹与路径，支持搜索、排序、筛选，以及新建、重命名、移动、复制和回收站管理。</p>
+                    <div class="feature-line"></div>
+                    <span class="feature-caption">Browse · Organize · Find</span>
+                </article>
+                <div class="feature-stack">
+                    <article class="feature-compact glass" data-reveal data-delay="180">
+                        <div class="feature-compact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.5h10v15H7zM9.5 7h5M9.5 10h5M9.5 13h3"/></svg></div>
+                        <div><h3>界面美观，简洁无广</h3><p>没有官方客户端铺天盖地的广告、也没有123云盘官方的下载流量限制。同时采用Jetpack Compose开发出一套精美的UI界面，更便于展示</p></div>
+                    </article>
+                    <article class="feature-compact glass" data-reveal data-delay="90">
+                        <div class="feature-compact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg></div>
+                        <div><h3>传输不中断</h3><p>批量上传下载、断点续传、暂停继续，任务队列在后台保持清晰。</p></div>
+                    </article>
+                    <article class="feature-compact glass" data-reveal data-delay="180">
+                        <div class="feature-compact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.5h10v15H7zM9.5 7h5M9.5 10h5M9.5 13h3"/></svg></div>
+                        <div><h3>登录方式更自由</h3><p>支持账号密码、扫码登录，也可以使用 Cookie / Token 鉴权。</p></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- release and version history sections removed -->
+
+        <section class="about-section content-wrap" id="about" aria-labelledby="about-title">
+            <div class="about-inner glass" data-reveal>
+                <div><p class="eyebrow">A quiet tool for your cloud</p><h2 id="about-title">不替你做决定，<br><span>只把操作变简单。</span></h2></div>
+                <div class="about-details"><p>Cloud123Lite 是个人学习与技术研究项目，为 123 云盘提供一个无广告、简洁流畅的第三方客户端体验。项目使用 Kotlin、Jetpack Compose 与 Hilt 构建，所有实现都可以在源码中查阅。</p><p class="disclaimer">本项目为第三方非官方客户端，与 123 云盘官方无关。请遵守相关服务条款及法律法规。</p></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer content-wrap">
+        <div class="footer-brand"><span class="footer-mark">C<span>123</span></span><span>Cloud123Lite</span></div>
+        <p>Made for a calmer cloud workflow.</p>
+        <a href="https://github.com/banqiuxy/Cloud123Lite" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </footer>
+    <script src="index.js" defer></script>
+</body>
+</html>

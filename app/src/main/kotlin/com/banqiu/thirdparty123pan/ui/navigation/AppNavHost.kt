@@ -1,26 +1,34 @@
 package com.banqiu.thirdparty123pan.ui.navigation
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.banqiu.thirdparty123pan.ui.screens.about.AboutScreen
+import com.banqiu.thirdparty123pan.ui.activities.AboutActivity
+import com.banqiu.thirdparty123pan.ui.activities.RecycleBinActivity
+import com.banqiu.thirdparty123pan.ui.activities.SettingsActivity
+import com.banqiu.thirdparty123pan.ui.activities.ShareListActivity
 import com.banqiu.thirdparty123pan.ui.screens.home.FileDetailScreen
 import com.banqiu.thirdparty123pan.ui.screens.home.HomeScreen
 import com.banqiu.thirdparty123pan.ui.screens.home.PreviewScreen
 import com.banqiu.thirdparty123pan.ui.screens.home.SearchScreen
 import com.banqiu.thirdparty123pan.ui.screens.login.LoginScreen
 import com.banqiu.thirdparty123pan.ui.screens.main.MainScreen
-import com.banqiu.thirdparty123pan.ui.screens.profile.RecycleBinScreen
-import com.banqiu.thirdparty123pan.ui.screens.profile.SettingsScreen
-import com.banqiu.thirdparty123pan.ui.screens.profile.ShareListScreen
 import com.banqiu.thirdparty123pan.ui.screens.splash.SplashScreen
 
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+
+    fun openActivity(activityClass: Class<out android.app.Activity>) {
+        context.startActivity(Intent(context, activityClass))
+    }
 
     NavHost(
         navController = navController,
@@ -51,10 +59,10 @@ fun AppNavHost() {
         composable(Routes.MAIN) {
             MainScreen(
                 onNavigateSearch = { navController.navigate(Routes.SEARCH) },
-                onNavigateSettings = { navController.navigate(Routes.SETTINGS) },
-                onNavigateRecycleBin = { navController.navigate(Routes.RECYCLE_BIN) },
-                onNavigateShares = { navController.navigate(Routes.SHARES) },
-                onNavigateAbout = { navController.navigate(Routes.ABOUT) },
+                onNavigateSettings = { openActivity(SettingsActivity::class.java) },
+                onNavigateRecycleBin = { openActivity(RecycleBinActivity::class.java) },
+                onNavigateShares = { openActivity(ShareListActivity::class.java) },
+                onNavigateAbout = { openActivity(AboutActivity::class.java) },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.MAIN) { inclusive = true }
@@ -125,22 +133,6 @@ fun AppNavHost() {
                 name = entry.arguments?.getString("name") ?: "",
                 onBack = { navController.popBackStack() }
             )
-        }
-
-        composable(Routes.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Routes.RECYCLE_BIN) {
-            RecycleBinScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Routes.SHARES) {
-            ShareListScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Routes.ABOUT) {
-            AboutScreen(onBack = { navController.popBackStack() })
         }
     }
 }

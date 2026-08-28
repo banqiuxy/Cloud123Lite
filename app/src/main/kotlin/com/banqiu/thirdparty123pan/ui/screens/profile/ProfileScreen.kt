@@ -164,6 +164,17 @@ fun ProfileScreen(
 
 @Composable
 private fun UserCard(user: User?, loading: Boolean, onRefresh: () -> Unit) {
+    val displayName = user?.nickname?.takeIf { it.isNotBlank() }
+        ?: user?.uid?.takeIf { it > 0L }?.let { "UID $it" }
+        ?: "用户"
+    val accountSummary = buildString {
+        append(user?.vipName ?: "加载中…")
+        user?.uid?.takeIf { it > 0L }?.let {
+            append(" · UID ")
+            append(it)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -190,12 +201,12 @@ private fun UserCard(user: User?, loading: Boolean, onRefresh: () -> Unit) {
                     .padding(start = 14.dp)
             ) {
                 Text(
-                    text = user?.nickname ?: "用户 ${user?.uid ?: ""}",
+                    text = displayName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = user?.vipName ?: "加载中…",
+                    text = accountSummary,
                     style = MaterialTheme.typography.bodySmall,
                     color = if ((user?.vipLevel ?: 0) > 0) CloudSuccess
                     else MaterialTheme.colorScheme.onSurfaceVariant,

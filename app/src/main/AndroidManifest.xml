@@ -22,7 +22,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ThirdParty123pan">
+        android:theme="@style/Theme.ThirdParty123pan"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
@@ -35,6 +36,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 四个二级页面使用独立 Activity，使系统可以预览 MainActivity -->
+        <activity
+            android:name=".ui.activities.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.AboutActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.RecycleBinActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.ShareListActivity"
+            android:exported="false" />
 
         <!-- Hilt + WorkManager 配置：移除默认初始化，使用 HiltWorkerFactory -->
         <provider
