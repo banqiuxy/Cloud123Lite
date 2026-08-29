@@ -44,10 +44,15 @@ class RecycleBinViewModel @Inject constructor(
 
     fun restore(fileIds: List<Long>) {
         viewModelScope.launch {
-            _uiState.update { it.copy(busy = true) }
+            _uiState.update { it.copy(busy = true, error = null) }
             try {
                 fileRepository.trash(fileIds, toTrash = false)
-                load()
+                _uiState.update { state ->
+                    state.copy(
+                        busy = false,
+                        files = state.files.filterNot { it.fileId in fileIds }
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(busy = false, error = e.message ?: "恢复失败") }
             }
@@ -56,10 +61,15 @@ class RecycleBinViewModel @Inject constructor(
 
     fun deletePermanently(fileIds: List<Long>) {
         viewModelScope.launch {
-            _uiState.update { it.copy(busy = true) }
+            _uiState.update { it.copy(busy = true, error = null) }
             try {
                 fileRepository.deletePermanently(fileIds)
-                load()
+                _uiState.update { state ->
+                    state.copy(
+                        busy = false,
+                        files = state.files.filterNot { it.fileId in fileIds }
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(busy = false, error = e.message ?: "删除失败") }
             }

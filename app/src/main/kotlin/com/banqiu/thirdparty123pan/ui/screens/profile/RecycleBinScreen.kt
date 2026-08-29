@@ -173,7 +173,10 @@ fun RecycleBinScreen(
             message = "将永久删除回收站中的全部文件，此操作不可撤销。",
             confirmText = "清空",
             destructive = true,
-            onConfirm = { viewModel.clearAll() },
+            onConfirm = {
+                confirmClearAll = false
+                viewModel.clearAll()
+            },
             onDismiss = { confirmClearAll = false }
         )
     }
