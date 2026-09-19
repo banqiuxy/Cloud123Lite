@@ -1,12 +1,14 @@
 [versions]
 agp = "8.13.0"
-kotlin = "2.1.0"
-ksp = "2.1.0-1.0.29"
+kotlin = "2.2.21"
+ksp = "2.2.21-2.0.4"
 coreKtx = "1.17.0"
 appcompat = "1.7.1"
 material = "1.13.0"
 constraintlayout = "2.2.1"
-composeBom = "2025.05.00"
+composeBom = "2025.11.01"
+backdrop = "1.0.0"
+capsule = "2.1.1"
 activityCompose = "1.10.1"
 lifecycle = "2.9.0"
 navigationCompose = "2.9.0"
@@ -34,6 +36,8 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 
 [libraries]
+capsule = { group = "io.github.kyant0", name = "capsule", version.ref = "capsule" }
+backdrop = { group = "io.github.kyant0", name = "backdrop", version.ref = "backdrop" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

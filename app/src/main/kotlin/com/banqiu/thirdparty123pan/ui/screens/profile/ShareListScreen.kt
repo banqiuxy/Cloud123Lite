@@ -1,5 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.screens.profile
 
+import com.banqiu.thirdparty123pan.ui.components.glassSurface
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,7 +22,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,7 +69,7 @@ fun ShareListScreen(
                 hazeState = hazeState,
                 title = "分享记录",
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    AppIconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 }
@@ -130,7 +131,7 @@ private fun ShareRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
+            .glassSurface(RoundedCornerShape(20.dp))
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -170,10 +171,10 @@ private fun ShareRow(
                 )
             }
         }
-        IconButton(onClick = onCopy) {
+        AppIconButton(onClick = onCopy) {
             Icon(Icons.Filled.ContentCopy, contentDescription = "复制链接", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        IconButton(onClick = onDelete) {
+        AppIconButton(onClick = onDelete) {
             Icon(Icons.Filled.Delete, contentDescription = "取消分享", tint = CloudError)
         }
     }

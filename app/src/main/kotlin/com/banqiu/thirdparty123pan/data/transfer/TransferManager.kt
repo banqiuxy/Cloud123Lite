@@ -20,6 +20,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -43,12 +48,14 @@ class TransferManager @Inject constructor(
     private val dao: TransferTaskDao,
     private val downloadEngine: DownloadEngine,
     private val uploadEngine: UploadEngine,
+    private val storage: DownloadTargetStorage,
     private val settingsStore: SettingsStore,
     @ApplicationContext private val context: Context
 ) : TransferRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val activeJobs = ConcurrentHashMap<Long, Job>()
+    private val queueMutex = Mutex()
     private val manuallyPaused = ConcurrentHashMap.newKeySet<Long>()
 
     override val tasks: Flow<List<TransferTask>> =
@@ -61,15 +68,18 @@ class TransferManager @Inject constructor(
         createNotificationChannel()
     }
 
-    override fun addDownload(fileItem: FileItem, destination: String) {
+    override fun addDownload(fileItem: FileItem) {
         scope.launch {
+            val directory = settingsStore.downloadDir.first()
             val id = dao.insert(
                 TransferTaskEntity(
                     type = 1,
                     fileId = fileItem.fileId,
-                    localPath = destination,
+                    storageKind = if (directory.isBlank()) "public" else "saf",
+                    directoryUri = directory.takeIf { it.isNotBlank() },
                     remoteDirId = fileItem.parentId,
                     name = fileItem.name,
+                    sourceName = fileItem.name,
                     size = fileItem.size,
                     etag = fileItem.etag,
                     s3KeyFlag = fileItem.s3KeyFlag,
@@ -100,87 +110,142 @@ class TransferManager @Inject constructor(
         }
     }
 
+    override fun resolveConflict(id: Long, overwrite: Boolean, newName: String?) {
+        scope.launch {
+            queueMutex.withLock {
+                val task = dao.getById(id) ?: return@withLock
+                if (task.status != 6) return@withLock
+                try {
+                    val name = newName ?: task.name
+                    validateDownloadName(name)
+                    if (overwrite && task.conflictUri == null) throw IllegalArgumentException("请重新检查目标文件")
+                    val reset = if (overwrite && task.ownsOutput && task.outputUri != null) {
+                        storage.discardOutput(task)
+                        task.copy(outputUri = null, ownsOutput = false)
+                    } else task
+                    dao.update(reset.copy(name = name, overwriteUri = if (overwrite) task.conflictUri else null,
+                        conflictUri = null, error = null, status = 0))
+                } catch (e: Exception) { dao.updateError(id, e.message ?: "文件名无效") }
+            }
+            pump()
+        }
+    }
+
     override fun pause(id: Long) {
-        manuallyPaused.add(id)
-        activeJobs[id]?.cancel()
+        scope.launch {
+            queueMutex.withLock {
+                val task = dao.getById(id) ?: return@withLock
+                if (task.status != 0 && task.status != 1) return@withLock
+                manuallyPaused.add(id)
+                activeJobs[id]?.cancel() ?: dao.updateStatus(id, 2)
+            }
+        }
     }
 
     override fun resume(id: Long) {
-        manuallyPaused.remove(id)
         scope.launch {
-            dao.updateStatus(id, 0)
+            queueMutex.withLock {
+                val task = dao.getById(id) ?: return@withLock
+                if (task.status != 2 || activeJobs.containsKey(id)) return@withLock
+                manuallyPaused.remove(id)
+                dao.updateStatus(id, 0)
+            }
             pump()
         }
     }
 
     override fun cancel(id: Long) {
-        manuallyPaused.remove(id)
-        activeJobs[id]?.cancel()
         scope.launch {
-            val task = dao.getById(id) ?: return@launch
-            if (task.status == 0 || task.status == 1) {
-                dao.finish(id, 5, System.currentTimeMillis())
+            queueMutex.withLock {
+                manuallyPaused.remove(id)
+                val task = dao.getById(id) ?: return@withLock
+                if (task.status == 3 || task.status == 5) return@withLock
+                val job = activeJobs[id]
+                if (job != null) job.cancel()
+                else {
+                    runCatching { storage.cleanup(task) }.onFailure { dao.updateError(id, "清理未完成文件失败：${it.message}") }
+                    dao.finish(id, 5, System.currentTimeMillis())
+                }
             }
-            // 清理残留的临时文件
-            task.localPath?.let { File(it).takeIf { f -> f.exists() && f.length() < task.size }?.delete() }
         }
     }
 
     override fun retry(id: Long) {
         scope.launch {
-            dao.updateError(id, null)
-            dao.updateUrl(id, null) // 强制重新解析下载链接
-            dao.updateStatus(id, 0)
+            queueMutex.withLock {
+                val task = dao.getById(id) ?: return@withLock
+                if (task.status != 4 || activeJobs.containsKey(id)) return@withLock
+                dao.update(task.copy(error = null, url = null, status = 0,
+                    overwriteUri = null, conflictUri = null,
+                    outputUri = if (task.ownsOutput) task.outputUri else null))
+            }
             pump()
         }
     }
 
-    override fun clearFinished() {
-        scope.launch { dao.clearFinished() }
-    }
-
+    override fun clearFinished() { scope.launch { dao.clearFinished() } }
     override fun remove(id: Long) {
-        scope.launch { dao.delete(id) }
+        scope.launch {
+            queueMutex.withLock {
+                val task = dao.getById(id) ?: return@withLock
+                if (activeJobs.containsKey(id)) return@withLock
+                if (task.status != 3) runCatching { storage.cleanup(task) }
+                dao.delete(id)
+            }
+        }
     }
 
-    /** 应用/进程重启后恢复中断任务 */
     suspend fun resumeInterrupted() {
-        val interrupted = dao.getByStatuses(listOf(0, 1))
-        interrupted.forEach { dao.updateStatus(it.id, 0) }
+        queueMutex.withLock {
+            dao.getByStatuses(listOf(1)).filterNot { activeJobs.containsKey(it.id) }.forEach { dao.updateStatus(it.id, 0) }
+        }
         pump()
     }
 
-    private suspend fun pump() {
-        val concurrency = settingsStore.concurrency.first()
-        val running = dao.getByStatuses(listOf(1)).size
-        val slots = (concurrency - running).coerceAtLeast(0)
-        if (slots <= 0) return
-        val waiting = dao.getByStatuses(listOf(0)).take(slots)
-        waiting.forEach { startTask(it) }
+    private suspend fun pump() = queueMutex.withLock {
+        val concurrency = settingsStore.concurrency.first().coerceIn(1, 3)
+        val running = dao.getByStatuses(listOf(1)).toMutableList()
+        for (task in dao.getByStatuses(listOf(0)).sortedBy { it.id }) {
+            if (activeJobs.size >= concurrency) break
+            if (activeJobs.containsKey(task.id)) continue
+            // Serialize only identical destinations, so a second task sees the first published file.
+            if (task.type == 1 && running.any { it.type == 1 && it.storageKind == task.storageKind &&
+                    it.directoryUri == task.directoryUri && it.name == task.name }) continue
+            try {
+                if (task.type == 1) storage.checkConflict(task)
+                dao.updateStatus(task.id, 1)
+                startTask(task)
+                running.add(task)
+            } catch (e: DownloadConflict) {
+                dao.update(task.copy(status = 6, conflictUri = e.existingUri, error = e.message))
+            } catch (e: Exception) {
+                dao.update(task.copy(status = 4, error = e.message))
+            }
+        }
     }
 
     private fun startTask(task: TransferTaskEntity) {
-        val job = scope.launch {
-            dao.updateStatus(task.id, 1)
+        val job = scope.launch(start = CoroutineStart.LAZY) {
             try {
-                if (task.type == 1) {
-                    downloadEngine.download(task.id) { progress, speed ->
-                        updateProgress(task.id, progress, speed)
-                    }
-                } else {
-                    uploadEngine.upload(task.id) { progress, speed ->
-                        updateProgress(task.id, progress, speed)
-                    }
-                }
+                if (task.type == 1) downloadEngine.download(task.id) { progress, speed -> updateProgress(task.id, progress, speed) }
+                else uploadEngine.upload(task.id) { progress, speed -> updateProgress(task.id, progress, speed) }
+                dao.updateProgress(task.id, 1f, 0)
                 dao.finish(task.id, 3, System.currentTimeMillis())
                 notifyFinished(task.name)
             } catch (e: CancellationException) {
-                if (manuallyPaused.contains(task.id)) {
-                    dao.updateStatus(task.id, 2)
-                } else {
-                    dao.finish(task.id, 5, System.currentTimeMillis())
+                withContext(NonCancellable) {
+                    val latest = dao.getById(task.id)
+                    if (latest?.phase == "published") dao.finish(task.id, 3, System.currentTimeMillis())
+                    else if (manuallyPaused.contains(task.id)) dao.updateStatus(task.id, 2)
+                    else {
+                        if (latest != null) runCatching { storage.cleanup(latest) }
+                            .onFailure { dao.updateError(task.id, "清理未完成文件失败：${it.message}") }
+                        dao.finish(task.id, 5, System.currentTimeMillis())
+                    }
                 }
                 throw e
+            } catch (e: DownloadConflict) {
+                dao.getById(task.id)?.let { dao.update(it.copy(status = 6, conflictUri = e.existingUri, error = e.message)) }
             } catch (e: Exception) {
                 dao.updateError(task.id, e.message ?: "未知错误")
                 dao.finish(task.id, 4, System.currentTimeMillis())
@@ -191,6 +256,7 @@ class TransferManager @Inject constructor(
             }
         }
         activeJobs[task.id] = job
+        job.start()
     }
 
     private fun updateProgress(id: Long, progress: Float, speed: Long) {

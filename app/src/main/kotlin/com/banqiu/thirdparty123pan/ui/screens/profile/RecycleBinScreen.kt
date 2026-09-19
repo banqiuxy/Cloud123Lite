@@ -1,5 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.screens.profile
 
+import com.banqiu.thirdparty123pan.ui.components.AppModalBottomSheet
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -21,9 +23,7 @@ import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.RestoreFromTrash
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -69,13 +69,13 @@ fun RecycleBinScreen(
                 hazeState = hazeState,
                 title = "回收站",
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    AppIconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
                     if (state.files.isNotEmpty()) {
-                        IconButton(onClick = { confirmClearAll = true }) {
+                        AppIconButton(onClick = { confirmClearAll = true }) {
                             Icon(Icons.Filled.DeleteForever, contentDescription = "清空回收站", tint = CloudError)
                         }
                     }
@@ -110,7 +110,7 @@ fun RecycleBinScreen(
     }
 
     confirmTarget?.let { item ->
-        ModalBottomSheet(onDismissRequest = { confirmTarget = null }) {
+        AppModalBottomSheet(onDismissRequest = { confirmTarget = null }) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,7 +126,7 @@ fun RecycleBinScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(interactionSource = null, indication = null) {
                             viewModel.restore(listOf(item.fileId))
                             confirmTarget = null
                         }
@@ -139,7 +139,7 @@ fun RecycleBinScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(interactionSource = null, indication = null) {
                             confirmPermanent = true
                             confirmTarget = null
                         }

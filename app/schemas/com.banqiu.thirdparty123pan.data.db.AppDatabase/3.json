@@ -1,0 +1,166 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "a71921471623696c2a32004f1954a430",
+    "entities": [
+      {
+        "tableName": "transfer_tasks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` INTEGER NOT NULL, `fileId` INTEGER NOT NULL, `localPath` TEXT, `remoteDirId` INTEGER NOT NULL, `name` TEXT NOT NULL, `size` INTEGER NOT NULL, `progress` REAL NOT NULL, `speed` INTEGER NOT NULL, `status` INTEGER NOT NULL, `createTime` INTEGER NOT NULL, `finishTime` INTEGER, `error` TEXT, `etag` TEXT, `s3KeyFlag` TEXT, `storageKind` TEXT NOT NULL DEFAULT 'legacy', `sourceName` TEXT, `directoryUri` TEXT, `outputUri` TEXT, `stagingPath` TEXT, `phase` TEXT NOT NULL DEFAULT 'download', `conflictUri` TEXT, `overwriteUri` TEXT, `ownsOutput` INTEGER NOT NULL DEFAULT 0, `url` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileId",
+            "columnName": "fileId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localPath",
+            "columnName": "localPath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "remoteDirId",
+            "columnName": "remoteDirId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "progress",
+            "columnName": "progress",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speed",
+            "columnName": "speed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "finishTime",
+            "columnName": "finishTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "error",
+            "columnName": "error",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "etag",
+            "columnName": "etag",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "s3KeyFlag",
+            "columnName": "s3KeyFlag",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "storageKind",
+            "columnName": "storageKind",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'legacy'"
+          },
+          {
+            "fieldPath": "sourceName",
+            "columnName": "sourceName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "directoryUri",
+            "columnName": "directoryUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "outputUri",
+            "columnName": "outputUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "stagingPath",
+            "columnName": "stagingPath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "phase",
+            "columnName": "phase",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'download'"
+          },
+          {
+            "fieldPath": "conflictUri",
+            "columnName": "conflictUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "overwriteUri",
+            "columnName": "overwriteUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ownsOutput",
+            "columnName": "ownsOutput",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a71921471623696c2a32004f1954a430')"
+    ]
+  }
+}

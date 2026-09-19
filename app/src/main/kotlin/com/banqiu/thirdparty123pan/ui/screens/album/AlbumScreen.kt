@@ -1,5 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.screens.album
 
+import com.banqiu.thirdparty123pan.ui.components.glassSurface
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,7 +31,6 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +47,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -55,7 +57,6 @@ import com.banqiu.thirdparty123pan.ui.components.CloudError
 import com.banqiu.thirdparty123pan.ui.components.CloudLoading
 import com.banqiu.thirdparty123pan.ui.components.GlassCard
 import com.banqiu.thirdparty123pan.ui.components.GlassTopBar
-import com.banqiu.thirdparty123pan.ui.screens.home.defaultDownloadPath
 import com.banqiu.thirdparty123pan.ui.theme.CloudBlue
 import com.banqiu.thirdparty123pan.ui.theme.CloudError
 import com.banqiu.thirdparty123pan.ui.theme.ImageColor
@@ -70,6 +71,7 @@ import dev.chrisbanes.haze.HazeState
 fun AlbumScreen(
     hazeState: HazeState,
     glassEnabled: Boolean,
+    bottomInset: Dp = 0.dp,
     viewModel: AlbumViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,14 +85,14 @@ fun AlbumScreen(
             title = if (state.selectionMode) "已选 ${state.selectedIds.size} 项" else state.currentDirName,
             navigationIcon = if (state.selectionMode) {
                 {
-                    IconButton(onClick = viewModel::exitSelection) {
+                    AppIconButton(onClick = viewModel::exitSelection) {
                         Icon(Icons.Filled.Close, contentDescription = "取消选择")
                     }
                 }
             } else null,
             actions = {
                 if (!state.selectionMode) {
-                    IconButton(onClick = viewModel::back) {
+                    AppIconButton(onClick = viewModel::back) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回全部")
                     }
                 }
@@ -127,7 +129,7 @@ fun AlbumScreen(
                 )
                 else -> LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
-                    contentPadding = PaddingValues(12.dp, bottom = 96.dp),
+                    contentPadding = PaddingValues(12.dp, bottom = 96.dp + bottomInset),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -158,6 +160,7 @@ fun AlbumScreen(
             GlassCard(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .padding(bottom = bottomInset)
                     .fillMaxWidth()
                     .padding(16.dp),
                 hazeState = hazeState,
@@ -174,7 +177,7 @@ fun AlbumScreen(
                             .padding(10.dp)
                             .combinedClickable(onClick = {
                                 viewModel.downloadSelected { item, _ ->
-                                    viewModel.addDownload(item, defaultDownloadPath(context, item.name))
+                                    viewModel.addDownload(item)
                                 }
                             })
                     ) {
@@ -203,10 +206,7 @@ fun AlbumScreen(
 private fun AlbumTab(text: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier
-            .background(
-                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
-                RoundedCornerShape(12.dp)
-            )
+            .glassSurface(RoundedCornerShape(12.dp), if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
             .combinedClickable(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center

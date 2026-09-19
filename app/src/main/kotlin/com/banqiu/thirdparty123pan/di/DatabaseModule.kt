@@ -19,7 +19,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "cloud123.db")
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            .addMigrations(com.banqiu.thirdparty123pan.data.db.TransferMigrations.FROM_2_TO_3)
             .build()
 
     @Provides

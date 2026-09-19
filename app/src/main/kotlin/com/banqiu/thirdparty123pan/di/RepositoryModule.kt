@@ -17,6 +17,10 @@ import dagger.hilt.components.SingletonComponent
 abstract class RepositoryModule {
 
     @Binds
+    abstract fun bindDownloadStorage(impl: com.banqiu.thirdparty123pan.data.transfer.DownloadStorage):
+        com.banqiu.thirdparty123pan.data.transfer.DownloadTargetStorage
+
+    @Binds
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 
     @Binds

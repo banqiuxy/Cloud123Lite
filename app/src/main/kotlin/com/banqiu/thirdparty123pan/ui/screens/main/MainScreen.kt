@@ -4,13 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PhotoLibrary
@@ -22,6 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.banqiu.thirdparty123pan.data.prefs.SettingsStore
@@ -51,6 +53,7 @@ fun MainScreen(
     settingsStore: SettingsStore = hiltViewModel<SettingsHolder>().settingsStore
 ) {
     val hazeState = remember { HazeState() }
+    val backdrop = rememberLayerBackdrop()
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val glassEnabled by settingsStore.glassEnabled.collectAsStateWithLifecycle(initialValue = true)
 
@@ -62,39 +65,45 @@ fun MainScreen(
     )
 
     Box(Modifier.fillMaxSize()) {
-        CloudBackground(hazeState)
+        // Record only the background/content, never the dock that samples it.
+        Box(Modifier.fillMaxSize().then(if (glassEnabled && android.os.Build.VERSION.SDK_INT >= 31) Modifier.layerBackdrop(backdrop) else Modifier)) {
+            CloudBackground(hazeState)
 
-        Column(Modifier.fillMaxSize()) {
-            Box(Modifier.weight(1f)) {
-                when (selectedTab) {
-                    0 -> HomeScreen(
-                        hazeState = hazeState,
-                        glassEnabled = glassEnabled,
-                        onNavigateSearch = onNavigateSearch,
-                        onOpenFile = onOpenFile,
-                        onOpenPreview = onOpenPreview
-                    )
-                    1 -> TransferScreen(hazeState = hazeState, glassEnabled = glassEnabled)
-                    2 -> AlbumScreen(hazeState = hazeState, glassEnabled = glassEnabled)
-                    else -> ProfileScreen(
-                        hazeState = hazeState,
-                        glassEnabled = glassEnabled,
-                        onNavigateSettings = onNavigateSettings,
-                        onNavigateRecycleBin = onNavigateRecycleBin,
-                        onNavigateShares = onNavigateShares,
-                        onNavigateAbout = onNavigateAbout,
-                        onLogout = onLogout
-                    )
+            Column(Modifier.fillMaxSize().navigationBarsPadding()) {
+                Box(Modifier.weight(1f)) {
+                    when (selectedTab) {
+                        0 -> HomeScreen(
+                            hazeState = hazeState,
+                            bottomInset = 84.dp,
+                            glassEnabled = glassEnabled,
+                            onNavigateSearch = onNavigateSearch,
+                            onOpenFile = onOpenFile,
+                            onOpenPreview = onOpenPreview
+                        )
+                        1 -> TransferScreen(hazeState = hazeState, glassEnabled = glassEnabled, bottomInset = 84.dp)
+                        2 -> AlbumScreen(hazeState = hazeState, glassEnabled = glassEnabled, bottomInset = 84.dp)
+                        else -> ProfileScreen(
+                            hazeState = hazeState,
+                            bottomInset = 84.dp,
+                            glassEnabled = glassEnabled,
+                            onNavigateSettings = onNavigateSettings,
+                            onNavigateRecycleBin = onNavigateRecycleBin,
+                            onNavigateShares = onNavigateShares,
+                            onNavigateAbout = onNavigateAbout,
+                            onLogout = onLogout
+                        )
+                    }
                 }
             }
-            GlassBottomBar(
-                hazeState = hazeState,
-                items = navItems,
-                selectedIndex = selectedTab,
-                onSelect = { selectedTab = it },
-                glassEnabled = glassEnabled
-            )
         }
+        GlassBottomBar(
+            backdrop = backdrop,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            items = navItems,
+            selectedIndex = selectedTab,
+            onSelect = { selectedTab = it },
+            glassEnabled = glassEnabled
+        )
     }
 }
 

@@ -11,7 +11,7 @@ enum class TaskType(val value: Int) {
 }
 
 enum class TaskStatus(val value: Int) {
-    WAITING(0), RUNNING(1), PAUSED(2), SUCCESS(3), FAILED(4), CANCELED(5);
+    WAITING(0), RUNNING(1), PAUSED(2), SUCCESS(3), FAILED(4), CANCELED(5), CONFLICT(6);
 
     companion object {
         fun from(value: Int): TaskStatus = entries.firstOrNull { it.value == value } ?: WAITING

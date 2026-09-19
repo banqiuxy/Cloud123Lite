@@ -1,5 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.screens.profile
 
+import com.banqiu.thirdparty123pan.ui.components.glassSurface
+import com.banqiu.thirdparty123pan.ui.components.AppLinearProgressIndicator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +28,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.banqiu.thirdparty123pan.domain.model.User
@@ -64,6 +66,7 @@ fun ProfileScreen(
     onNavigateShares: () -> Unit,
     onNavigateAbout: () -> Unit,
     onLogout: () -> Unit,
+    bottomInset: Dp = 0.dp,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,7 +85,7 @@ fun ProfileScreen(
                     modifier = Modifier
                         .padding(12.dp)
                         .size(22.dp)
-                        .clickable(onClick = onNavigateSettings)
+                        .clickable(interactionSource = null, indication = null, onClick = onNavigateSettings)
                 )
             }
         )
@@ -91,6 +94,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(bottom = bottomInset)
                 .padding(16.dp)
         ) {
             // 用户卡片
@@ -125,8 +129,8 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                    .clickable { showLogoutConfirm = true }
+                    .glassSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.errorContainer)
+                    .clickable(interactionSource = null, indication = null) { showLogoutConfirm = true }
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -178,7 +182,7 @@ private fun UserCard(user: User?, loading: Boolean, onRefresh: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f), RoundedCornerShape(24.dp))
+            .glassSurface(RoundedCornerShape(24.dp))
             .padding(20.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -219,7 +223,7 @@ private fun UserCard(user: User?, loading: Boolean, onRefresh: () -> Unit) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(20.dp)
-                    .clickable(onClick = onRefresh)
+                    .clickable(interactionSource = null, indication = null, onClick = onRefresh)
             )
         }
 
@@ -242,7 +246,7 @@ private fun UserCard(user: User?, loading: Boolean, onRefresh: () -> Unit) {
                 )
             }
             Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(
+            AppLinearProgressIndicator(
                 progress = { user.usedPercent },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -259,7 +263,7 @@ private fun ProfileSection(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f), RoundedCornerShape(24.dp))
+            .glassSurface(RoundedCornerShape(24.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         content()
@@ -276,7 +280,7 @@ private fun ProfileItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = null, indication = null, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

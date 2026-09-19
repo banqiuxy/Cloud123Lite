@@ -1,5 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.screens.home
 
+import com.banqiu.thirdparty123pan.ui.components.AppCircularProgressIndicator
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,9 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,7 +74,7 @@ fun PreviewScreen(
             hazeState = hazeState,
             title = name,
             navigationIcon = {
-                IconButton(onClick = onBack) {
+                AppIconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                 }
             }
@@ -109,7 +109,7 @@ fun PreviewScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                else -> CircularProgressIndicator(
+                else -> AppCircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = Color.White
                 )

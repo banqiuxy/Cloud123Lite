@@ -1,5 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.components
 
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,11 +18,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -43,9 +45,6 @@ import com.banqiu.thirdparty123pan.ui.theme.ShapeBottomBar
 import com.banqiu.thirdparty123pan.ui.theme.ShapeLarge
 import com.banqiu.thirdparty123pan.ui.theme.ShapeMedium
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 
 /**
  * 液态玻璃风格基础组件（UI-UX spec）
@@ -69,7 +68,7 @@ fun CloudBackground(
         modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(start, end)))
-            .then(if (hazeState != null) Modifier.hazeSource(hazeState) else Modifier)
+
     ) {
         // 装饰光斑：打破纯平背景
         Box(
@@ -106,7 +105,7 @@ fun CloudBackground(
 }
 
 /**
- * 玻璃卡片：haze 模糊 + 半透明填充 + 细边框 + 可选点击
+ * 玻璃卡片：Backdrop 折射 + 半透明填充 + 细边框 + 可选点击
  */
 @Composable
 fun GlassCard(
@@ -117,30 +116,18 @@ fun GlassCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val surface = MaterialTheme.colorScheme.surface.copy(alpha = if (glassEnabled) 0.55f else 0.85f)
-    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.14f)
     val interaction = remember { MutableInteractionSource() }
-
-    // 注意顺序：hazeEffect 需在 background/border 之前应用（绘制在底层），border 最外层可见
-    val base = modifier
-        .clip(shape)
-        .then(
-            if (glassEnabled && hazeState != null) {
-                Modifier.hazeEffect(hazeState) {
-                    backgroundColor = surface
-                    blurRadius = 40.dp
-                }
-            } else Modifier
-        )
-        .background(surface, shape)
-        .border(1.dp, borderColor, shape)
+    val base = modifier.glassSurface(
+        shape as? androidx.compose.foundation.shape.CornerBasedShape ?: RoundedCornerShape(24.dp),
+        enabled = glassEnabled
+    ).clip(shape)
 
     if (onClick != null) {
         androidx.compose.foundation.layout.Column(
             modifier = base
                 .clickable(
                     interactionSource = interaction,
-                    indication = androidx.compose.material3.ripple(),
+                    indication = null,
                     onClick = onClick
                 ),
             content = content
@@ -165,26 +152,10 @@ fun GlassTopBar(
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
-    val surface = MaterialTheme.colorScheme.surface.copy(alpha = if (glassEnabled) 0.5f else 0.85f)
     val shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .height(56.dp)
-            .clip(shape)
-            .then(
-                if (glassEnabled && hazeState != null) {
-                    Modifier.hazeEffect(hazeState) {
-                        backgroundColor = surface
-                        blurRadius = 35.dp
-                    }
-                } else Modifier
-            )
-            .background(surface, shape)
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.10f), shape)
-            .padding(horizontal = 4.dp),
+        modifier = modifier.fillMaxWidth().statusBarsPadding().height(56.dp)
+            .glassSurface(shape, enabled = glassEnabled).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         navigationIcon?.invoke()
@@ -205,72 +176,6 @@ fun GlassTopBar(
 /**
  * 玻璃底部导航栏：28dp 圆角胶囊，浮动于内容之上
  */
-@Composable
-fun GlassBottomBar(
-    hazeState: HazeState?,
-    items: List<BottomNavItem>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-    glassEnabled: Boolean = true
-) {
-    val surface = MaterialTheme.colorScheme.surface.copy(alpha = if (glassEnabled) 0.55f else 0.9f)
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .height(64.dp)
-            .clip(ShapeBottomBar)
-            .then(
-                if (glassEnabled && hazeState != null) {
-                    Modifier.hazeEffect(hazeState) {
-                        backgroundColor = surface
-                        blurRadius = 40.dp
-                    }
-                } else Modifier
-            )
-            .background(surface, ShapeBottomBar)
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f), ShapeBottomBar),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        items.forEachIndexed { index, item ->
-            val selected = index == selectedIndex
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .then(
-                        if (selected) {
-                            Modifier.background(CloudBlue.copy(alpha = 0.14f))
-                        } else Modifier
-                    )
-                    .clickable { onSelect(index) },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (selected) item.selectedIcon else item.icon,
-                        contentDescription = item.label,
-                        tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    if (selected) {
-                        Text(
-                            text = item.label,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 6.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
 data class BottomNavItem(
     val label: String,
     val icon: ImageVector,
@@ -290,7 +195,7 @@ fun GlassButton(
     containerColor: Color = CloudBlue,
     contentColor: Color = Color.White
 ) {
-    Button(
+    AppButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
@@ -325,13 +230,15 @@ fun GlassFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    FloatingActionButton(
+    AppButton(
         onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        containerColor = CloudBlue,
-        contentColor = Color.White
+        modifier = modifier.sizeIn(minWidth = 96.dp, minHeight = 56.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
     ) {
-        Icon(icon, contentDescription = contentDescription)
+        Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+        Text(contentDescription, style = MaterialTheme.typography.labelLarge)
     }
 }

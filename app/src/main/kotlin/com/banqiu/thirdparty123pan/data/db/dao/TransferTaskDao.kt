@@ -28,7 +28,7 @@ interface TransferTaskDao {
     @Query("UPDATE transfer_tasks SET status = :status WHERE id = :id")
     suspend fun updateStatus(id: Long, status: Int)
 
-    @Query("UPDATE transfer_tasks SET progress = :progress, speed = :speed WHERE id = :id")
+    @Query("UPDATE transfer_tasks SET progress = :progress, speed = :speed WHERE id = :id AND status = 1")
     suspend fun updateProgress(id: Long, progress: Float, speed: Long)
 
     @Query("UPDATE transfer_tasks SET status = :status, finishTime = :finishTime WHERE id = :id")

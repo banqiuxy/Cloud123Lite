@@ -71,8 +71,8 @@ class AlbumViewModel @Inject constructor(
         null
     }
 
-    fun addDownload(item: FileItem, destination: String) {
-        transferRepository.addDownload(item, destination)
+    fun addDownload(item: FileItem) {
+        transferRepository.addDownload(item)
     }
 
     fun setShowImages(showImages: Boolean) {

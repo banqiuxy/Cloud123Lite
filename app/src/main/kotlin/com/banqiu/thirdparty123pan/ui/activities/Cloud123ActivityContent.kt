@@ -1,6 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.activities
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -14,6 +15,7 @@ fun Cloud123ActivityContent(content: @Composable () -> Unit) {
     val themeViewModel: ThemeViewModel = hiltViewModel()
     val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
     val dynamicColor by themeViewModel.dynamicColor.collectAsStateWithLifecycle()
+    val glassEnabled by themeViewModel.glassEnabled.collectAsStateWithLifecycle()
     val darkTheme = when (themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.LIGHT -> false
@@ -22,7 +24,11 @@ fun Cloud123ActivityContent(content: @Composable () -> Unit) {
 
     Cloud123Theme(
         darkTheme = darkTheme,
-        dynamicColor = dynamicColor,
-        content = content
-    )
+        dynamicColor = dynamicColor
+    ) {
+        com.banqiu.thirdparty123pan.ui.components.GlassScene(glassEnabled, androidx.compose.ui.Modifier.fillMaxSize()) {
+            content()
+            com.banqiu.thirdparty123pan.ui.components.DownloadConflictHost()
+        }
+    }
 }

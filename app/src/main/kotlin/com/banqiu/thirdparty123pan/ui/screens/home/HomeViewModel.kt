@@ -343,7 +343,7 @@ class HomeViewModel @Inject constructor(
 
     // ==================== 传输 ====================
 
-    fun download(item: FileItem, destination: String) {
+    fun download(item: FileItem) {
         viewModelScope.launch {
             // 列表中已有元数据时直接入队；详情页/搜索页可能丢失 Etag/S3KeyFlag，先回查父目录。
             val resolved = if (!item.etag.isNullOrBlank() && !item.s3KeyFlag.isNullOrBlank()) {
@@ -361,7 +361,7 @@ class HomeViewModel @Inject constructor(
                 }
                 return@launch
             }
-            transferRepository.addDownload(resolved, destination)
+            transferRepository.addDownload(resolved)
         }
     }
 

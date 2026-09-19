@@ -9,6 +9,7 @@ plugins {
 
 android {
     namespace 'com.banqiu.thirdparty123pan'
+    // AndroidX Core 1.17.0 requires API 36; keep this independent of targetSdk.
     compileSdk 36
 
     defaultConfig {
@@ -17,6 +18,15 @@ android {
         targetSdk 34
         versionCode 20
         versionName '2.0'
+    }
+
+    buildTypes {
+        debug {
+            if (providers.gradleProperty("glassPreview").isPresent()) {
+                applicationIdSuffix ".glasspreview"
+                versionNameSuffix "-glass-check"
+            }
+        }
     }
 
     buildFeatures {
@@ -94,6 +104,10 @@ dependencies {
     implementation libs.datastore.preferences
     implementation libs.work.runtime.ktx
 
+    // Backdrop refraction for the dock and switches; Haze remains for existing cards.
+    implementation libs.backdrop
+    implementation libs.capsule
+
     // Haze glass effect
     implementation libs.haze
 
@@ -103,6 +117,22 @@ dependencies {
     // QR code
     implementation libs.zxing.core
 
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "com.squareup.okhttp3:mockwebserver:4.12.0"
+
     debugImplementation platform(libs.compose.bom)
     debugImplementation libs.compose.ui.tooling
+}
+// Export Room schema for migration verification.
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
+
+// Also expose the same JUnit classpath for Windows machines whose Gradle worker
+// launcher cannot read a non-ASCII user-home path. This does not skip compilation.
+tasks.register('exportUnitTestClasspath') {
+    dependsOn 'compileDebugUnitTestKotlin', 'processDebugUnitTestJavaRes', 'transformDebugUnitTestClassesWithAsm'
+    doLast {
+        def output = layout.buildDirectory.file('unit-test-classpath.txt').get().asFile
+        output.parentFile.mkdirs()
+        output.text = tasks.named('testDebugUnitTest').get().classpath.files.collect { it.absolutePath }.join('\n')
+    }
 }

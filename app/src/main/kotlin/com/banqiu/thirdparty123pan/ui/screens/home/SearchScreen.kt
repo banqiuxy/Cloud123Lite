@@ -1,5 +1,7 @@
 package com.banqiu.thirdparty123pan.ui.screens.home
 
+import com.banqiu.thirdparty123pan.ui.components.AppOutlinedTextField
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,9 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,13 +64,13 @@ fun SearchScreen(
             hazeState = hazeState,
             title = "搜索",
             navigationIcon = {
-                IconButton(onClick = onBack) {
+                AppIconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                 }
             }
         )
 
-        OutlinedTextField(
+        AppOutlinedTextField(
             value = query,
             onValueChange = { query = it },
             placeholder = { Text("搜索文件名…") },

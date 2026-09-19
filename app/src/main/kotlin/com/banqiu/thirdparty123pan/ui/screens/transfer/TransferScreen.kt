@@ -1,5 +1,8 @@
 package com.banqiu.thirdparty123pan.ui.screens.transfer
 
+import com.banqiu.thirdparty123pan.ui.components.glassSurface
+import com.banqiu.thirdparty123pan.ui.components.AppLinearProgressIndicator
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,8 +32,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.banqiu.thirdparty123pan.domain.model.TaskStatus
@@ -66,13 +68,14 @@ import dev.chrisbanes.haze.HazeState
 fun TransferScreen(
     hazeState: HazeState,
     glassEnabled: Boolean,
+    bottomInset: Dp = 0.dp,
     viewModel: TransferViewModel = hiltViewModel()
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
 
     // Tab: 0 进行中(上传+下载), 1 已完成, 2 失败
-    val active = tasks.filter { it.status == TaskStatus.WAITING || it.status == TaskStatus.RUNNING || it.status == TaskStatus.PAUSED }
+    val active = tasks.filter { it.status == TaskStatus.WAITING || it.status == TaskStatus.RUNNING || it.status == TaskStatus.PAUSED || it.status == TaskStatus.CONFLICT }
     val finished = tasks.filter { it.status == TaskStatus.SUCCESS || it.status == TaskStatus.CANCELED }
     val failed = tasks.filter { it.status == TaskStatus.FAILED }
 
@@ -83,7 +86,7 @@ fun TransferScreen(
             title = "传输管理",
             actions = {
                 if (tab == 1) {
-                    IconButton(onClick = viewModel::clearFinished) {
+                    AppIconButton(onClick = viewModel::clearFinished) {
                         Icon(Icons.Filled.Delete, contentDescription = "清除已完成")
                     }
                 }
@@ -108,10 +111,7 @@ fun TransferScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .background(
-                    MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
-                    RoundedCornerShape(14.dp)
-                )
+                .glassSurface(RoundedCornerShape(14.dp))
                 .padding(4.dp)
         ) {
             TransferTab("进行中", tab == 0, Modifier.weight(1f)) { tab = 0 }
@@ -142,7 +142,7 @@ fun TransferScreen(
                     }
                 )
                 else -> LazyColumn(
-                    contentPadding = PaddingValues(bottom = 24.dp)
+                    contentPadding = PaddingValues(bottom = 24.dp + bottomInset)
                 ) {
                     items(visible, key = { it.id }) { task ->
                         TransferTaskRow(
@@ -196,11 +196,8 @@ private fun TransferStat(
 private fun TransferTab(text: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier
-            .background(
-                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                RoundedCornerShape(10.dp)
-            )
-            .clickable(onClick = onClick)
+            .glassSurface(RoundedCornerShape(10.dp), if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
+            .clickable(interactionSource = null, indication = null, onClick = onClick)
             .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -230,7 +227,7 @@ private fun TransferTaskRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
+            .glassSurface(RoundedCornerShape(20.dp))
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -264,36 +261,36 @@ private fun TransferTaskRow(
             when (task.status) {
                 TaskStatus.WAITING, TaskStatus.RUNNING -> {
                     if (task.status == TaskStatus.RUNNING) {
-                        IconButton(onClick = onPause) {
+                        AppIconButton(onClick = onPause) {
                             Icon(Icons.Filled.Pause, contentDescription = "暂停", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     } else {
-                        IconButton(onClick = onResume) {
+                        AppIconButton(onClick = onResume) {
                             Icon(Icons.Filled.PlayArrow, contentDescription = "继续", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    IconButton(onClick = onCancel) {
+                    AppIconButton(onClick = onCancel) {
                         Icon(Icons.Filled.Cancel, contentDescription = "取消", tint = CloudError)
                     }
                 }
                 TaskStatus.PAUSED -> {
-                    IconButton(onClick = onResume) {
+                    AppIconButton(onClick = onResume) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = "继续", tint = CloudBlue)
                     }
-                    IconButton(onClick = onCancel) {
+                    AppIconButton(onClick = onCancel) {
                         Icon(Icons.Filled.Cancel, contentDescription = "取消", tint = CloudError)
                     }
                 }
                 TaskStatus.FAILED -> {
-                    IconButton(onClick = onRetry) {
+                    AppIconButton(onClick = onRetry) {
                         Icon(Icons.Filled.Refresh, contentDescription = "重试", tint = CloudWarning)
                     }
-                    IconButton(onClick = onRemove) {
+                    AppIconButton(onClick = onRemove) {
                         Icon(Icons.Filled.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 else -> {
-                    IconButton(onClick = onRemove) {
+                    AppIconButton(onClick = onRemove) {
                         Icon(Icons.Filled.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -302,7 +299,7 @@ private fun TransferTaskRow(
 
         if (task.status == TaskStatus.WAITING || task.status == TaskStatus.RUNNING || task.status == TaskStatus.PAUSED) {
             Spacer(Modifier.height(10.dp))
-            LinearProgressIndicator(
+            AppLinearProgressIndicator(
                 progress = { task.progress.coerceIn(0f, 1f) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -351,4 +348,5 @@ private fun statusText(task: TransferTask): String = when (task.status) {
     TaskStatus.SUCCESS -> "已完成 · ${Formatters.formatSize(task.size)}"
     TaskStatus.FAILED -> "失败"
     TaskStatus.CANCELED -> "已取消"
+    TaskStatus.CONFLICT -> "等待处理同名文件"
 }

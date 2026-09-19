@@ -21,5 +21,14 @@ data class TransferTaskEntity(
     // 下载请求必须携带文件列表返回的 Etag 和 S3KeyFlag（API.md §5.9）。
     val etag: String? = null,
     val s3KeyFlag: String? = null,
+    @androidx.room.ColumnInfo(defaultValue = "'legacy'") val storageKind: String = "legacy",
+    val sourceName: String? = null,
+    val directoryUri: String? = null,
+    val outputUri: String? = null,
+    val stagingPath: String? = null,
+    @androidx.room.ColumnInfo(defaultValue = "'download'") val phase: String = "download",
+    val conflictUri: String? = null,
+    val overwriteUri: String? = null,
+    @androidx.room.ColumnInfo(defaultValue = "0") val ownsOutput: Boolean = false,
     val url: String? = null            // 下载：已解析的直链（断点续传复用）
 )

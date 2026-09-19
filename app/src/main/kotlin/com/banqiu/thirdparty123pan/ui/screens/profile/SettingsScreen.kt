@@ -1,6 +1,12 @@
 package com.banqiu.thirdparty123pan.ui.screens.profile
 
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
+import com.banqiu.thirdparty123pan.ui.components.glassSurface
 import android.Manifest
+import android.content.Intent
+import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,9 +36,11 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
+import com.banqiu.thirdparty123pan.ui.components.LiquidGlassSwitch
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,6 +76,7 @@ fun SettingsScreen(
     settingsStore: SettingsStore = hiltViewModel<SettingsStoreHolder>().settingsStore
 ) {
     val hazeState = remember { HazeState() }
+    val backdrop = rememberLayerBackdrop()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -78,6 +87,25 @@ fun SettingsScreen(
     val concurrency by settingsStore.concurrency.collectAsStateWithLifecycle(initialValue = 3)
     val downloadDir by settingsStore.downloadDir.collectAsStateWithLifecycle(initialValue = "")
 
+    val directoryPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.takePersistableUriPermission(uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    settingsStore.validateDownloadDirectory(uri.toString())
+                }
+                settingsStore.setDownloadDir(uri.toString())
+            } catch (e: Exception) {
+                Toast.makeText(context, "目录授权失败：${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    var directoryLabel by remember { mutableStateOf("公共存储 / Download / Cloud123Lite") }
+    androidx.compose.runtime.LaunchedEffect(downloadDir) {
+        directoryLabel = withContext(Dispatchers.IO) { settingsStore.downloadDirectoryLabel(downloadDir) }
+    }
+
     var showClearCacheConfirm by remember { mutableStateOf(false) }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -85,14 +113,15 @@ fun SettingsScreen(
     ) { }
 
     Box(Modifier.fillMaxSize()) {
-        CloudBackground(hazeState)
+        // Separate source layer prevents recursive sampling of the switches.
+        CloudBackground(hazeState, if (glassEnabled && android.os.Build.VERSION.SDK_INT >= 31) Modifier.layerBackdrop(backdrop) else Modifier)
 
         Column(Modifier.fillMaxSize()) {
             GlassTopBar(
                 hazeState = hazeState,
                 title = "设置",
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    AppIconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 }
@@ -118,14 +147,18 @@ fun SettingsScreen(
                     SettingsSwitchItem(
                         "动态色彩",
                         icon = Icons.Filled.Palette,
-                        checked = dynamicColor
+                        checked = dynamicColor,
+                        backdrop = backdrop,
+                        glassEnabled = glassEnabled
                     ) { checked ->
                         scope.launch { settingsStore.setDynamicColor(checked) }
                     }
                     SettingsSwitchItem(
                         "液态玻璃效果",
                         icon = Icons.Filled.DarkMode,
-                        checked = glassEnabled
+                        checked = glassEnabled,
+                        backdrop = backdrop,
+                        glassEnabled = glassEnabled
                     ) { checked ->
                         scope.launch { settingsStore.setGlassEnabled(checked) }
                     }
@@ -149,8 +182,13 @@ fun SettingsScreen(
                     SettingsItem(
                         "下载位置",
                         icon = Icons.Filled.Download,
-                        value = if (downloadDir.isBlank()) "应用目录 (Cloud123)" else "自定义目录",
-                        onClick = {}
+                        value = directoryLabel,
+                        onClick = { directoryPicker.launch(null) }
+                    )
+                    if (downloadDir.isNotBlank()) SettingsItem(
+                        "恢复默认下载目录", icon = Icons.Filled.Download,
+                        value = "Download/Cloud123Lite",
+                        onClick = { scope.launch { settingsStore.setDownloadDir("") } }
                     )
                 }
 
@@ -162,7 +200,9 @@ fun SettingsScreen(
                     SettingsSwitchItem(
                         "任务完成通知",
                         icon = Icons.Filled.Notifications,
-                        checked = notificationsEnabled
+                        checked = notificationsEnabled,
+                        backdrop = backdrop,
+                        glassEnabled = glassEnabled
                     ) { checked ->
                         scope.launch { settingsStore.setNotificationsEnabled(checked) }
                         if (checked) {
@@ -236,7 +276,7 @@ private fun SettingsCard(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
+            .glassSurface(RoundedCornerShape(20.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         content()
@@ -253,7 +293,7 @@ private fun SettingsItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = null, indication = null, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -286,6 +326,8 @@ private fun SettingsSwitchItem(
     label: String,
     icon: ImageVector,
     checked: Boolean,
+    backdrop: Backdrop,
+    glassEnabled: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
@@ -302,7 +344,10 @@ private fun SettingsSwitchItem(
                 .weight(1f)
                 .padding(start = 14.dp)
         )
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        LiquidGlassSwitch(
+            checked = checked, onCheckedChange = onCheckedChange,
+            backdrop = backdrop, glassEnabled = glassEnabled, label = label
+        )
     }
 }
 

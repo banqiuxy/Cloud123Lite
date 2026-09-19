@@ -1,5 +1,8 @@
 package com.banqiu.thirdparty123pan.ui.screens.login
 
+import com.banqiu.thirdparty123pan.ui.components.glassSurface
+import com.banqiu.thirdparty123pan.ui.components.AppCircularProgressIndicator
+import com.banqiu.thirdparty123pan.ui.components.AppOutlinedTextField
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,11 +24,9 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.VpnKey
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -104,10 +105,7 @@ fun LoginScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
-                        RoundedCornerShape(16.dp)
-                    )
+                    .glassSurface(RoundedCornerShape(16.dp))
                     .padding(4.dp)
             ) {
                 LoginTab("账号密码", tab == 0, Modifier.weight(1f)) { tab = 0 }
@@ -146,11 +144,8 @@ fun LoginScreen(
 private fun LoginTab(text: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier
-            .background(
-                if (selected) CloudBlue else Color.Transparent,
-                RoundedCornerShape(12.dp)
-            )
-            .clickable(onClick = onClick)
+            .glassSurface(RoundedCornerShape(12.dp), if (selected) CloudBlue else MaterialTheme.colorScheme.surface)
+            .clickable(interactionSource = null, indication = null, onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -172,7 +167,7 @@ private fun PasswordLoginContent(
     var password by rememberSaveable { mutableStateOf("") }
 
     Column {
-        OutlinedTextField(
+        AppOutlinedTextField(
             value = passport,
             onValueChange = { passport = it },
             label = { Text("手机号 / 邮箱") },
@@ -182,7 +177,7 @@ private fun PasswordLoginContent(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(14.dp))
-        OutlinedTextField(
+        AppOutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("密码") },
@@ -242,7 +237,7 @@ private fun QrLoginContent(
                 )
             }
             QrStatus.LOADING -> {
-                CircularProgressIndicator(Modifier.size(48.dp), strokeWidth = 3.dp)
+                AppCircularProgressIndicator(Modifier.size(48.dp), strokeWidth = 3.dp)
                 Text(
                     text = "正在获取二维码…",
                     style = MaterialTheme.typography.bodyMedium,
@@ -310,7 +305,7 @@ private fun TokenImportContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        AppOutlinedTextField(
             value = token,
             onValueChange = { token = it },
             label = { Text("Token / Cookie") },

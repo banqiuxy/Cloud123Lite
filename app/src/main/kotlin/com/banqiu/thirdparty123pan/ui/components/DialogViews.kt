@@ -16,13 +16,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,11 +45,11 @@ fun TextInputDialog(
 ) {
     var value by remember { mutableStateOf(initialValue) }
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title, style = MaterialTheme.typography.titleLarge) },
         text = {
-            OutlinedTextField(
+            AppOutlinedTextField(
                 value = value,
                 onValueChange = { value = it },
                 placeholder = { Text(placeholder) },
@@ -64,13 +61,13 @@ fun TextInputDialog(
             )
         },
         confirmButton = {
-            TextButton(
+            AppTextButton(
                 onClick = { onConfirm(value.trim()) },
                 enabled = value.isNotBlank()
             ) { Text(confirmText) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            AppTextButton(onClick = onDismiss) { Text("取消") }
         },
         shape = RoundedCornerShape(24.dp),
         containerColor = MaterialTheme.colorScheme.surface
@@ -87,12 +84,12 @@ fun ConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title, style = MaterialTheme.typography.titleLarge) },
         text = { Text(message, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
-            TextButton(
+            AppTextButton(
                 onClick = {
                     onConfirm()
                     onDismiss()
@@ -106,7 +103,7 @@ fun ConfirmDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            AppTextButton(onClick = onDismiss) { Text("取消") }
         },
         shape = RoundedCornerShape(24.dp),
         containerColor = MaterialTheme.colorScheme.surface
@@ -129,7 +126,7 @@ fun FolderPickerDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
@@ -147,7 +144,7 @@ fun FolderPickerDialog(
         text = {
             Column(modifier = Modifier.height(320.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onBack, enabled = !isRoot) {
+                    AppTextButton(onClick = onBack, enabled = !isRoot) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回上级", modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
                         Text("上级目录")
@@ -160,7 +157,7 @@ fun FolderPickerDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        androidx.compose.material3.CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
+                        AppCircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
                     }
                 } else if (folders.isEmpty()) {
                     Column(
@@ -186,7 +183,7 @@ fun FolderPickerDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onEnterFolder(folder) }
+                                    .clickable(interactionSource = null, indication = null) { onEnterFolder(folder) }
                                     .padding(vertical = 10.dp, horizontal = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -218,10 +215,10 @@ fun FolderPickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(confirmText) }
+            AppTextButton(onClick = onConfirm) { Text(confirmText) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            AppTextButton(onClick = onDismiss) { Text("取消") }
         },
         shape = RoundedCornerShape(24.dp),
         containerColor = MaterialTheme.colorScheme.surface

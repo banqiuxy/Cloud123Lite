@@ -7,8 +7,8 @@ import com.banqiu.thirdparty123pan.data.db.entity.TransferTaskEntity
 
 @Database(
     entities = [TransferTaskEntity::class],
-    version = 2,
-    exportSchema = false
+    version = 3,
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transferTaskDao(): TransferTaskDao

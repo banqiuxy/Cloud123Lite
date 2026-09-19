@@ -1,5 +1,12 @@
 package com.banqiu.thirdparty123pan.ui.screens.home
 
+import com.banqiu.thirdparty123pan.ui.components.glassSurface
+import com.banqiu.thirdparty123pan.ui.components.AppCircularProgressIndicator
+import com.banqiu.thirdparty123pan.ui.components.AppFilterChip
+import com.banqiu.thirdparty123pan.ui.components.AppModalBottomSheet
+import com.banqiu.thirdparty123pan.ui.components.AppDropdownMenu
+import com.banqiu.thirdparty123pan.ui.components.AppOutlinedTextField
+import com.banqiu.thirdparty123pan.ui.components.AppIconButton
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
@@ -40,16 +47,11 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.VpnKey
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.banqiu.thirdparty123pan.domain.model.FileItem
@@ -106,6 +109,7 @@ fun HomeScreen(
     onNavigateSearch: () -> Unit,
     onOpenFile: (FileItem) -> Unit,
     onOpenPreview: (FileItem) -> Unit,
+    bottomInset: Dp = 0.dp,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -188,14 +192,14 @@ fun HomeScreen(
             else state.breadcrumbs.lastOrNull()?.name ?: "我的网盘",
             navigationIcon = if (state.selectionMode) {
                 {
-                    IconButton(onClick = viewModel::exitSelectionMode) {
+                    AppIconButton(onClick = viewModel::exitSelectionMode) {
                         Icon(Icons.Filled.Close, contentDescription = "取消选择")
                     }
                 }
             } else null,
             actions = {
                 if (!state.selectionMode) {
-                    IconButton(onClick = onNavigateSearch) {
+                    AppIconButton(onClick = onNavigateSearch) {
                         Icon(Icons.Filled.Search, contentDescription = "搜索")
                     }
                     SortMenu(
@@ -221,7 +225,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.labelMedium,
                     color = if (state.breadcrumbs.isEmpty()) CloudBlue
                     else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.clickable { viewModel.navigateToRoot() }
+                    modifier = Modifier.clickable(interactionSource = null, indication = null) { viewModel.navigateToRoot() }
                 )
                 state.breadcrumbs.forEach { crumb ->
                     Text(
@@ -237,7 +241,7 @@ fun HomeScreen(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .weight(1f, fill = false)
-                            .clickable { }
+                            .clickable(interactionSource = null, indication = null) { }
                     )
                 }
             }
@@ -257,10 +261,11 @@ fun HomeScreen(
                 FileFilter.DOC to "文档",
                 FileFilter.AUDIO to "音频"
             ).forEach { (filter, label) ->
-                FilterChip(
+                AppFilterChip(
                     selected = state.filter == filter,
                     onClick = { viewModel.setFilter(filter) },
-                    label = { Text(label) }
+                    label = { Text(label, maxLines = 1) },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -279,7 +284,7 @@ fun HomeScreen(
                 )
                 else -> LazyColumn(
                     state = listState,
-                    contentPadding = PaddingValues(bottom = 96.dp)
+                    contentPadding = PaddingValues(bottom = 96.dp + bottomInset)
                 ) {
                     items(files, key = { it.fileId }) { item ->
                         val isSelected = item.fileId in state.selectedIds
@@ -315,7 +320,7 @@ fun HomeScreen(
                                 Modifier.fillMaxWidth().padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                                AppCircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
                             }
                         }
                     }
@@ -331,6 +336,7 @@ fun HomeScreen(
             GlassCard(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .padding(bottom = bottomInset)
                     .fillMaxWidth()
                     .padding(16.dp),
                 hazeState = hazeState,
@@ -343,7 +349,7 @@ fun HomeScreen(
                 ) {
                     SelectionAction("下载", Icons.Filled.Download) {
                         state.files.filter { it.fileId in state.selectedIds }.forEach {
-                            viewModel.download(it, defaultDownloadPath(context, it.name))
+                            viewModel.download(it)
                         }
                         viewModel.exitSelectionMode()
                     }
@@ -360,6 +366,7 @@ fun HomeScreen(
                 onClick = { showFabMenu = true },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
+                    .padding(bottom = bottomInset)
                     .padding(20.dp)
             )
         }
@@ -368,7 +375,7 @@ fun HomeScreen(
     // ==================== 对话框 ====================
 
     if (showFabMenu) {
-        ModalBottomSheet(onDismissRequest = { showFabMenu = false }) {
+        AppModalBottomSheet(onDismissRequest = { showFabMenu = false }) {
             Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
                 Text("添加内容", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(12.dp))
@@ -503,7 +510,7 @@ fun HomeScreen(
     }
 
     if (showShareSheet) {
-        ModalBottomSheet(onDismissRequest = { showShareSheet = false }) {
+        AppModalBottomSheet(onDismissRequest = { showShareSheet = false }) {
             Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
                 Text("分享文件", style = MaterialTheme.typography.titleLarge)
                 Text(
@@ -526,7 +533,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     listOf(7, 30, 365, 0).forEach { days ->
-                        FilterChip(
+                        AppFilterChip(
                             selected = shareDays == days,
                             onClick = { shareDays = days },
                             label = { Text(if (days == 0) "永久" else "${days}天") }
@@ -595,7 +602,7 @@ fun HomeScreen(
 
     // 单项更多菜单
     itemMenuTarget?.let { target ->
-        DropdownMenu(
+        AppDropdownMenu(
             expanded = true,
             onDismissRequest = { itemMenuTarget = null },
             containerColor = MaterialTheme.colorScheme.surface
@@ -604,7 +611,7 @@ fun HomeScreen(
                 text = { Text("下载") },
                 leadingIcon = { Icon(Icons.Filled.Download, null) },
                 onClick = {
-                    viewModel.download(target, defaultDownloadPath(context, target.name))
+                    viewModel.download(target)
                     itemMenuTarget = null
                 }
             )
@@ -680,10 +687,10 @@ private fun SortMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { expanded = true }) {
+        AppIconButton(onClick = { expanded = true }) {
             Icon(Icons.Filled.MoreVert, contentDescription = "排序")
         }
-        DropdownMenu(
+        AppDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             containerColor = MaterialTheme.colorScheme.surface
@@ -730,7 +737,7 @@ private fun SelectionAction(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = null, indication = null, onClick = onClick)
             .padding(10.dp)
     ) {
         Icon(
@@ -754,7 +761,7 @@ private fun TextInputDialogInline(
     onValueChange: (String) -> Unit,
     placeholder: String = ""
 ) {
-    androidx.compose.material3.OutlinedTextField(
+    AppOutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
@@ -775,11 +782,8 @@ private fun FabMenuItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .background(
-                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.8f),
-                RoundedCornerShape(20.dp)
-            )
-            .clickable(onClick = onClick)
+            .glassSurface(RoundedCornerShape(20.dp), MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(interactionSource = null, indication = null, onClick = onClick)
             .padding(vertical = 20.dp)
     ) {
         Icon(
@@ -798,11 +802,7 @@ private fun FabMenuItem(
 
 // ==================== 工具函数 ====================
 
-fun defaultDownloadPath(context: android.content.Context, fileName: String): String {
-    val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir, "Cloud123")
-    if (!dir.exists()) dir.mkdirs()
-    return File(dir, fileName).absolutePath
-}
+
 
 fun copyUriToCache(context: android.content.Context, uri: Uri): String {
     val cacheDir = File(context.cacheDir, "uploads")

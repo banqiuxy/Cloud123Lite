@@ -16,8 +16,10 @@ class ThemeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val themeMode: StateFlow<ThemeMode> = settingsStore.themeMode
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.LIGHT)
+
+    val glassEnabled = settingsStore.glassEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     val dynamicColor: StateFlow<Boolean> = settingsStore.dynamicColor
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 }

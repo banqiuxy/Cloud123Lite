@@ -21,7 +21,8 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 @Singleton
 class SettingsStore @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val downloadStorage: com.banqiu.thirdparty123pan.data.transfer.DownloadTargetStorage
 ) {
     private object Keys {
         val THEME_MODE = stringPreferencesKey("theme_mode")
@@ -35,10 +36,10 @@ class SettingsStore @Inject constructor(
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
         prefs[Keys.THEME_MODE]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
-            ?: ThemeMode.SYSTEM
+            ?: ThemeMode.LIGHT
     }
 
-    val dynamicColor: Flow<Boolean> = context.dataStore.data.map { it[Keys.DYNAMIC_COLOR] ?: false }
+    val dynamicColor: Flow<Boolean> = context.dataStore.data.map { it[Keys.DYNAMIC_COLOR] ?: true }
 
     val glassEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.GLASS_ENABLED] ?: true }
 
@@ -60,6 +61,9 @@ class SettingsStore @Inject constructor(
 
     suspend fun setGlassEnabled(enabled: Boolean) =
         context.dataStore.edit { it[Keys.GLASS_ENABLED] = enabled }
+
+    fun validateDownloadDirectory(uri: String) = downloadStorage.validateDirectory(uri)
+    fun downloadDirectoryLabel(uri: String): String = downloadStorage.directoryLabel(uri)
 
     suspend fun setDownloadDir(uri: String) =
         context.dataStore.edit { it[Keys.DOWNLOAD_DIR] = uri }

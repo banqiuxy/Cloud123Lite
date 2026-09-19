@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -128,7 +127,7 @@ fun FileRow(
                 modifier = Modifier.size(22.dp)
             )
         } else if (onMoreClick != null) {
-            IconButton(onClick = onMoreClick) {
+            AppIconButton(onClick = onMoreClick) {
                 Icon(
                     imageVector = Icons.Filled.MoreVert,
                     contentDescription = "更多操作",

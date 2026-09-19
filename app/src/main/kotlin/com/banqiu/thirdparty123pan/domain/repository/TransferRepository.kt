@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface TransferRepository {
     val tasks: Flow<List<TransferTask>>
-    fun addDownload(fileItem: FileItem, destination: String)
+    fun addDownload(fileItem: FileItem)
+    fun resolveConflict(id: Long, overwrite: Boolean, newName: String? = null)
     fun addUpload(localPath: String, remoteDirId: Long, name: String)
     fun pause(id: Long)
     fun resume(id: Long)

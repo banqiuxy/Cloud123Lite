@@ -1,7 +1,6 @@
 package com.banqiu.thirdparty123pan.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -68,10 +67,11 @@ private val DarkColors = darkColorScheme(
 /**
  * Cloud123 主题：Material3 + 品牌主色，支持动态色彩与深浅模式
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun Cloud123Theme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
+    darkTheme: Boolean = false,
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -83,10 +83,12 @@ fun Cloud123Theme(
         else -> LightColors
     }
 
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalRippleConfiguration provides null) {
     MaterialTheme(
         colorScheme = colorScheme,
         typography = CloudTypography,
         shapes = CloudShapes,
         content = content
     )
+    }
 }

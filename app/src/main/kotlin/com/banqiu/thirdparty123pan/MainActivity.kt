@@ -21,22 +21,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val themeViewModel: ThemeViewModel = hiltViewModel()
-            val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
-            val dynamicColor by themeViewModel.dynamicColor.collectAsStateWithLifecycle()
-
-            val darkTheme = when (themeMode) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
-
-            Cloud123Theme(
-                darkTheme = darkTheme,
-                dynamicColor = dynamicColor
-            ) {
-                AppNavHost()
-            }
+            com.banqiu.thirdparty123pan.ui.activities.Cloud123ActivityContent { AppNavHost() }
         }
     }
 }
