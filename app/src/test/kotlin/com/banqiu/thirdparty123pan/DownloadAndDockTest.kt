@@ -2,6 +2,7 @@ package com.banqiu.thirdparty123pan
 
 import com.banqiu.thirdparty123pan.data.transfer.validateDownloadName
 import com.banqiu.thirdparty123pan.data.transfer.validateContentRange
+import com.banqiu.thirdparty123pan.ui.components.upstream.components.tabFractionAtPosition
 import com.banqiu.thirdparty123pan.ui.components.upstream.components.tabIndexAtPosition
 import com.banqiu.thirdparty123pan.ui.components.upstream.components.toggleValueOnRelease
 import org.junit.Assert.*
@@ -51,5 +52,18 @@ class DownloadAndDockTest {
     @Test fun switchDragCommitsItsSynchronousFraction() {
         assertTrue(toggleValueOnRelease(false, 20f, 8f, 1f))
         assertFalse(toggleValueOnRelease(true, -20f, 8f, 0f))
+    }
+    @Test fun fractionTracksFingerContinuously() {
+        assertEquals(0.5f, tabFractionAtPosition(4f + 50f * 0.5f, 4f, 50f, 4, true), 1e-3f)
+        assertEquals(1.5f, tabFractionAtPosition(4f + 50f * 1.5f, 4f, 50f, 4, true), 1e-3f)
+        assertEquals(2.5f, tabFractionAtPosition(4f + 50f * 2.5f, 4f, 50f, 4, true), 1e-3f)
+    }
+    @Test fun fractionClampsToRange() {
+        assertEquals(0f, tabFractionAtPosition(-100f, 4f, 50f, 4, true), 1e-3f)
+        assertEquals(3f, tabFractionAtPosition(300f, 4f, 50f, 4, true), 1e-3f)
+    }
+    @Test fun fractionMirrorsForRtl() {
+        assertEquals(3f, tabFractionAtPosition(4f, 4f, 50f, 4, false), 1e-3f)
+        assertEquals(0f, tabFractionAtPosition(4f + 50f * 3f, 4f, 50f, 4, false), 1e-3f)
     }
 }

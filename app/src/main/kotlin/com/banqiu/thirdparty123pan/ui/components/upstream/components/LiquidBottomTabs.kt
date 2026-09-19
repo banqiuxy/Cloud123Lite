@@ -117,7 +117,7 @@ fun LiquidBottomTabs(
                 consumeGestures = true,
                 onDragStarted = { position ->
                     dragPosition = position
-                    dragTarget = tabIndexAtPosition(position.x, with(density) { 4.dp.toPx() }, tabWidth, tabsCount, isLtr).toFloat()
+                    dragTarget = tabFractionAtPosition(position.x, with(density) { 4.dp.toPx() }, tabWidth, tabsCount, isLtr)
                     updateValue(dragTarget)
                 },
                 onDragCancelled = {
@@ -141,7 +141,7 @@ fun LiquidBottomTabs(
                     dragPosition += dragAmount
                     // Absolute hit testing also makes a held tab preview exactly under the finger.
                     // Slight overflow clamps to the end tab; vertical overflow does not undo selection.
-                    dragTarget = tabIndexAtPosition(dragPosition.x, with(density) { 4.dp.toPx() }, tabWidth, tabsCount, isLtr).toFloat()
+                    dragTarget = tabFractionAtPosition(dragPosition.x, with(density) { 4.dp.toPx() }, tabWidth, tabsCount, isLtr)
                     updateValue(dragTarget)
                     animationScope.launch {
                         offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
@@ -310,4 +310,9 @@ fun LiquidBottomTabs(
 internal fun tabIndexAtPosition(x: Float, padding: Float, tabWidth: Float, count: Int, isLtr: Boolean): Int {
     val physical = ((x - padding) / tabWidth).toInt().coerceIn(0, count - 1)
     return if (isLtr) physical else count - 1 - physical
+}
+
+internal fun tabFractionAtPosition(x: Float, padding: Float, tabWidth: Float, count: Int, isLtr: Boolean): Float {
+    val physical = ((x - padding) / tabWidth).coerceIn(0f, (count - 1).toFloat())
+    return if (isLtr) physical else (count - 1).toFloat() - physical
 }
