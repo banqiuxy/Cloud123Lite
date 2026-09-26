@@ -313,6 +313,8 @@ internal fun tabIndexAtPosition(x: Float, padding: Float, tabWidth: Float, count
 }
 
 internal fun tabFractionAtPosition(x: Float, padding: Float, tabWidth: Float, count: Int, isLtr: Boolean): Float {
-    val physical = ((x - padding) / tabWidth).coerceIn(0f, (count - 1).toFloat())
+    // Subtract 0.5 so the thumb's CENTER (not left edge) tracks the finger.
+    // translationX = value * tabWidth positions the left edge; the center is at (value + 0.5) * tabWidth.
+    val physical = ((x - padding) / tabWidth - 0.5f).coerceIn(0f, (count - 1).toFloat())
     return if (isLtr) physical else (count - 1).toFloat() - physical
 }

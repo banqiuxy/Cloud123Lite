@@ -54,16 +54,18 @@ class DownloadAndDockTest {
         assertFalse(toggleValueOnRelease(true, -20f, 8f, 0f))
     }
     @Test fun fractionTracksFingerContinuously() {
-        assertEquals(0.5f, tabFractionAtPosition(4f + 50f * 0.5f, 4f, 50f, 4, true), 1e-3f)
-        assertEquals(1.5f, tabFractionAtPosition(4f + 50f * 1.5f, 4f, 50f, 4, true), 1e-3f)
-        assertEquals(2.5f, tabFractionAtPosition(4f + 50f * 2.5f, 4f, 50f, 4, true), 1e-3f)
+        // Touching the center of tab i maps to value i (thumb CENTER tracks finger, not left edge).
+        assertEquals(0f, tabFractionAtPosition(4f + 50f * 0.5f, 4f, 50f, 4, true), 1e-3f)
+        assertEquals(1f, tabFractionAtPosition(4f + 50f * 1.5f, 4f, 50f, 4, true), 1e-3f)
+        assertEquals(2f, tabFractionAtPosition(4f + 50f * 2.5f, 4f, 50f, 4, true), 1e-3f)
     }
     @Test fun fractionClampsToRange() {
         assertEquals(0f, tabFractionAtPosition(-100f, 4f, 50f, 4, true), 1e-3f)
         assertEquals(3f, tabFractionAtPosition(300f, 4f, 50f, 4, true), 1e-3f)
     }
     @Test fun fractionMirrorsForRtl() {
-        assertEquals(3f, tabFractionAtPosition(4f, 4f, 50f, 4, false), 1e-3f)
-        assertEquals(0f, tabFractionAtPosition(4f + 50f * 3f, 4f, 50f, 4, false), 1e-3f)
+        // RTL mirrors: touching the rightmost tab center → 0, leftmost tab center → 3.
+        assertEquals(3f, tabFractionAtPosition(4f + 50f * 0.5f, 4f, 50f, 4, false), 1e-3f)
+        assertEquals(0f, tabFractionAtPosition(4f + 50f * 2.5f, 4f, 50f, 4, false), 1e-3f)
     }
 }
